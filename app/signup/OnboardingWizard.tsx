@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -19,7 +19,10 @@ const stepVariants = {
   exit: { opacity: 0, x: -20, filter: 'blur(10px)' }
 }
 
-export default function OnboardingWizard() {
+}
+
+// Separate component that uses searchParams
+function OnboardingWizardContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -584,5 +587,18 @@ export default function OnboardingWizard() {
         </p>
       </motion.div>
     </div>
+  )
+}
+
+// Main export with Suspense boundary
+export default function OnboardingWizard() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
+        <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    }>
+      <OnboardingWizardContent />
+    </Suspense>
   )
 }
