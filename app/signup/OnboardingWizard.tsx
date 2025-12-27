@@ -19,7 +19,7 @@ const stepVariants = {
   exit: { opacity: 0, x: -20, filter: 'blur(10px)' }
 }
 
-}
+
 
 // Separate component that uses searchParams
 function OnboardingWizardContent() {
