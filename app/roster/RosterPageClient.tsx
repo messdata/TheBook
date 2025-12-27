@@ -284,7 +284,7 @@ export default function RosterPageClient() {
         setSelectedDate(date);
 
         // SAVE TO SUPABASE
-        await saveRosterToSupabase(userId, newRoster);
+        if (userId) await saveRosterToSupabase(userId, newRoster);
 
         // Update form with current data
         const updatedData = newRoster.get(key);
@@ -311,7 +311,7 @@ export default function RosterPageClient() {
             setRoster(newRoster);
 
             // SAVE TO SUPABASE
-            await saveRosterToSupabase(userId, newRoster);
+            if (userId) await saveRosterToSupabase(userId, newRoster);
         }
     };
 
@@ -362,7 +362,7 @@ export default function RosterPageClient() {
             opacity: 1,
             scale: 1,
             transition: {
-                type: "spring",
+                type: "spring" as const,
                 stiffness: 300,
                 damping: 24
             }
@@ -378,9 +378,9 @@ export default function RosterPageClient() {
         visible: {
             opacity: 1,
             y: 0,
-            height: "auto",
+            height: "auto" as const,
             transition: {
-                type: "spring",
+                type: "spring" as const,
                 stiffness: 300,
                 damping: 30
             }
@@ -889,4 +889,13 @@ export default function RosterPageClient() {
             </div>
         </div>
     );
+}
+
+function setSaving(arg0: boolean) {
+    throw new Error("Function not implemented.");
+}
+
+
+function setShowSaveSuccess(arg0: boolean) {
+    throw new Error("Function not implemented.");
 }
