@@ -18,7 +18,7 @@ import {
     Info,
 } from "lucide-react";
 import {
-    Tooltip,
+    Tooltip as RadixTooltip,
     TooltipContent,
     TooltipProvider,
     TooltipTrigger,
@@ -33,7 +33,7 @@ import {
     PointElement,
     LineElement,
     Title,
-
+    Tooltip,
     Legend,
     Filler,
 } from "chart.js";
@@ -113,7 +113,7 @@ export default function DashboardClient() {
 
             const { data: spending } = await supabase
                 .from('spending')
-                .select('category, amount')
+                .select('category, amount, date')  // ← Add 'date' here
                 .eq('user_id', userId)
                 .gte('date', startOfMonth.toISOString().split('T')[0]);
 
@@ -584,7 +584,7 @@ export default function DashboardClient() {
                                         <CardTitle className="text-base md:text-lg text-slate-700 dark:text-neutral-200">
                                             Current Week
                                         </CardTitle>
-                                        <Tooltip>
+                                        <RadixTooltip>
                                             <TooltipTrigger asChild>
                                                 <Info className="w-4 h-4 text-slate-400 hover:text-slate-600 cursor-help transition-colors" />
                                             </TooltipTrigger>
@@ -603,7 +603,7 @@ export default function DashboardClient() {
                                                     <TooltipArrow className="fill-white dark:fill-neutral-900" />
                                                 </TooltipContent>
                                             </TooltipPortal>
-                                        </Tooltip>
+                                        </RadixTooltip>
                                     </div>
                                 </CardHeader>
                                 <CardContent className="space-y-4">
@@ -637,7 +637,7 @@ export default function DashboardClient() {
                                         <CardTitle className="text-base md:text-lg text-slate-700 dark:text-neutral-200">
                                             Schedule
                                         </CardTitle>
-                                        <Tooltip>
+                                        <RadixTooltip>
                                             <TooltipTrigger asChild>
                                                 <Info className="w-4 h-4 text-slate-400 hover:text-slate-600 cursor-help transition-colors" />
                                             </TooltipTrigger>
@@ -656,7 +656,7 @@ export default function DashboardClient() {
                                                     <TooltipArrow className="fill-white dark:fill-neutral-900" />
                                                 </TooltipContent>
                                             </TooltipPortal>
-                                        </Tooltip>
+                                        </RadixTooltip>
                                     </div>
                                 </CardHeader>
                                 <CardContent className="flex gap-6 items-center px-6 pb-6 h-[calc(100%-4rem)]">
@@ -886,7 +886,7 @@ export default function DashboardClient() {
                                             <CardTitle className="text-base md:text-lg text-slate-700 dark:text-neutral-200">
                                                 Weekly Hours Overview
                                             </CardTitle>
-                                            <Tooltip>
+                                            <RadixTooltip>
                                                 <TooltipTrigger asChild>
                                                     <Info className="w-4 h-4 text-slate-400 hover:text-slate-600 cursor-help transition-colors" />
                                                 </TooltipTrigger>
@@ -905,7 +905,7 @@ export default function DashboardClient() {
                                                         <TooltipArrow className="fill-white dark:fill-neutral-900" />
                                                     </TooltipContent>
                                                 </TooltipPortal>
-                                            </Tooltip>
+                                            </RadixTooltip>
                                         </div>
                                         <DropdownMenu>
                                             <DropdownMenuTrigger asChild>
