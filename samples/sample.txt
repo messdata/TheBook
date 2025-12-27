@@ -1,0 +1,56 @@
+directory
+app/
+├── auth
+│   └── callback
+│       └── route.ts
+├── context
+│   └── RosterContext.tsx
+├── dashboard
+│   ├── layout.tsx
+│   └── page.tsx
+├── favicon.ico
+├── globals.css
+├── layout.tsx
+├── login
+│   └── page.tsx
+├── page.tsx
+├── providers.tsx
+├── roster
+│   ├── RosterPageClient.tsx
+│   ├── layout.tsx
+│   └── page.tsx
+├── signup
+│   ├── SignupClient.tsx
+│   └── page.tsx
+└── wallet
+    ├── WalletClient.tsx
+    ├── layout.tsx
+    └── page.tsx
+
+9 directories, 18 files
+
+components/
+├── MagicBento.tsx
+├── Providers.tsx
+├── auth
+│   └── LoginForm.tsx
+├── dashboard
+│   ├── DashboardClient.tsx
+│   ├── Sidebar.tsx
+│   └── TopBar.tsx
+├── theme-provider.tsx
+├── theme-toggle.tsx
+├── ui
+│   ├── avatar.tsx
+│   ├── button.tsx
+│   ├── card.tsx
+│   ├── chart.tsx
+│   ├── dropdown-menu.tsx
+│   ├── input.tsx
+│   ├── label.tsx
+│   └── switch.tsx
+└── wallet
+    └── PaySlip.tsx
+
+5 directories, 17 files
+
