@@ -1,6 +1,6 @@
 import Sidebar from "@/components/dashboard/Sidebar";
 import TopBar from "@/components/dashboard/TopBar";
-import { auth } from "@/lib/auth";
+
 import { redirect } from "next/navigation";
 import { RosterProvider } from "@/app/context/RosterContext";
 
