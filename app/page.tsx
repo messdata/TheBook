@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import {
   BookOpen,
@@ -12,15 +12,42 @@ import {
   Clock,
   ChevronRight,
   MousePointerClick,
-  Sparkles
 } from "lucide-react";
+import LoginForm from "@/components/auth/LoginForm";
+import OnboardingForm from "@/components/auth/OnboardingForm";
 
 export default function TheMidnightBook() {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
+  const [showLogin, setShowLogin] = useState(false);
+  const [showSignup, setShowSignup] = useState(false);
+  const [signupStep, setSignupStep] = useState(1);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => setMounted(true), []);
+
+  const handleLoginClick = () => {
+    if (!isOpen) setIsOpen(true);
+    setShowSignup(false);
+    setTimeout(() => setShowLogin(true), isOpen ? 0 : 600);
+  };
+
+  const handleSignupClick = () => {
+    if (!isOpen) setIsOpen(true);
+    setShowLogin(false);
+    setSignupStep(1);
+    setTimeout(() => setShowSignup(true), isOpen ? 0 : 600);
+  };
+
+  const handleBackToFeatures = () => {
+    setShowLogin(false);
+    setShowSignup(false);
+    setSignupStep(1);
+  };
+
+  const handleSignupStepChange = (step: number) => {
+    setSignupStep(step);
+  };
 
   if (!mounted) return null;
 
@@ -39,15 +66,23 @@ export default function TheMidnightBook() {
       />
 
       {/* THE BOOK STACK */}
-      {/* Changed: aspect-ratio is now responsive to prevent vertical cramping on mobile */}
       <div className="relative w-full max-w-[900px] aspect-[0.7/1] md:aspect-[1.4/1] perspective-[2000px]">
 
-        {/* THE PAGES (Underneath the cover) */}
-        {/* Changed: flex-col for mobile, flex-row for desktop */}
-        <div className="absolute inset-0 flex flex-col md:flex-row bg-white shadow-2xl rounded-lg md:rounded-r-lg overflow-hidden">
-
+        {/* Features Spread - Base Layer */}
+        <motion.div
+          animate={{
+            rotateY: (showLogin || showSignup) ? -180 : 0,
+            transition: { duration: 1.2, ease: [0.645, 0.045, 0.355, 1] }
+          }}
+          style={{
+            transformOrigin: "left center",
+            backfaceVisibility: "hidden",
+            position: "absolute",
+            inset: 0
+          }}
+          className="flex flex-col md:flex-row bg-white shadow-2xl rounded-lg md:rounded-r-lg overflow-hidden"
+        >
           {/* Left Page (Intro) */}
-          {/* Changed: Added border-b for mobile separation */}
           <div className="flex-1 p-6 md:p-12 border-b md:border-b-0 md:border-r border-slate-100 flex flex-col justify-between bg-[#fafafa]">
             <div className="space-y-4 md:space-y-6">
               <motion.div
@@ -85,13 +120,13 @@ export default function TheMidnightBook() {
               className="mt-4 flex flex-row gap-3"
             >
               <Button
-                onClick={() => router.push('/signup')}
+                onClick={handleSignupClick}
                 className="flex-1 md:flex-none bg-slate-900 text-white rounded-lg h-10 md:h-12 px-4 md:px-6 text-xs md:text-sm"
               >
                 Create Entry
               </Button>
               <Button
-                onClick={() => router.push('/login')}
+                onClick={handleLoginClick}
                 variant="ghost"
                 className="flex-1 md:flex-none text-slate-600 text-xs md:text-sm"
               >
@@ -100,8 +135,8 @@ export default function TheMidnightBook() {
             </motion.div>
           </div>
 
-          {/* Right Page (The Index) */}
-          <div className="flex-1 p-6 md:p-12 bg-white flex flex-col relative">
+          {/* Right Page (Features) */}
+          <div className="flex-1 p-6 md:p-12 bg-white flex flex-col">
             <motion.h3
               initial={{ opacity: 0 }}
               animate={isOpen ? { opacity: 1 } : {}}
@@ -139,7 +174,32 @@ export default function TheMidnightBook() {
 
           {/* Center Binding Crease */}
           <div className="absolute left-1/2 top-0 bottom-0 w-8 -ml-4 bg-gradient-to-r from-black/5 via-black/10 to-transparent pointer-events-none hidden md:block" />
-        </div>
+        </motion.div>
+
+        {/* Login/Signup Spread - Flipped Layer */}
+        <motion.div
+          animate={{
+            rotateY: (showLogin || showSignup) ? 0 : 180,
+            transition: { duration: 1.2, ease: [0.645, 0.045, 0.355, 1] }
+          }}
+          style={{
+            transformOrigin: "left center",
+            backfaceVisibility: "hidden",
+            position: "absolute",
+            inset: 0,
+            transform: "rotateY(180deg)"
+          }}
+          className="bg-white shadow-2xl rounded-lg md:rounded-r-lg overflow-hidden"
+        >
+          {showLogin && <LoginForm onBack={handleBackToFeatures} onSignupClick={handleSignupClick} />}
+          {showSignup && (
+            <OnboardingForm
+              onBack={handleBackToFeatures}
+              currentStep={signupStep}
+              onStepChange={handleSignupStepChange}
+            />
+          )}
+        </motion.div>
 
         {/* THE FRONT COVER */}
         <motion.div
@@ -178,11 +238,11 @@ export default function TheMidnightBook() {
         </motion.div>
 
         {/* BOOKMARK RIBBON */}
-        {/* Changed: Position adjusted to avoid overlapping mobile icons */}
         <motion.div
           animate={{
             y: isOpen ? 15 : 0,
-            height: isOpen ? "100px" : "80px"
+            height: isOpen ? "100px" : "80px",
+            opacity: (showLogin || showSignup) ? 0 : 1
           }}
           className="absolute top-[-10px] right-6 md:right-16 w-5 md:w-8 bg-red-700 shadow-md z-10 rounded-b-sm"
         />
