@@ -22,7 +22,7 @@ interface OnboardingFormProps {
     onStepChange: (step: number) => void;
 }
 
-export default function OnboardingForm({ onBack, currentStep, onStepChange }: OnboardingFormProps) {
+function OnboardingForm({ onBack, currentStep, onStepChange }: OnboardingFormProps) {
     const router = useRouter();
     const [isLoading, setIsLoading] = useState(false);
     const [userId, setUserId] = useState<string | null>(null);
@@ -673,3 +673,4 @@ export default function OnboardingForm({ onBack, currentStep, onStepChange }: On
 
     return renderStep();
 }
+export default OnboardingForm;
