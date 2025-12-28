@@ -78,53 +78,18 @@ function LoginForm({ onBack, onSignupClick }: LoginFormProps) {
     };
 
     return (
-        <div className="flex flex-col md:flex-row h-full">
-            {/* Left Page (Back button & Info) */}
-            <div className="flex-1 p-6 md:p-12 border-b md:border-b-0 md:border-r border-slate-100 bg-[#fafafa] flex flex-col">
+        <div className="w-full h-full flex flex-col md:flex-row">
+            {/* Right Section - Login Form (Shows FIRST on mobile) */}
+            <div className="w-full md:w-1/2 md:order-2 p-6 md:p-12 bg-white flex flex-col border-b md:border-b-0">
                 <Button
                     onClick={onBack}
                     variant="ghost"
-                    className="w-fit mb-6 text-slate-600 hover:text-slate-900 p-0"
+                    className="w-fit mb-6 text-slate-600 hover:text-slate-900 p-0 md:hidden"
                 >
                     <ArrowLeft size={18} className="mr-2" />
                     <span className="text-xs uppercase font-bold">Back</span>
                 </Button>
 
-                <div className="flex-1 flex flex-col justify-center space-y-6">
-                    <div>
-                        <h3 className="text-2xl md:text-3xl font-bold text-slate-900 mb-3">
-                            Secure Access
-                        </h3>
-                        <p className="text-slate-600 text-sm md:text-base leading-relaxed">
-                            Your work data is encrypted and protected. Sign in to access your personalized dashboard.
-                        </p>
-                    </div>
-
-                    <div className="space-y-3">
-                        <div className="flex items-start gap-3">
-                            <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-                                <div className="w-2 h-2 rounded-full bg-blue-600" />
-                            </div>
-                            <div>
-                                <p className="text-sm font-medium text-slate-900">End-to-end encryption</p>
-                                <p className="text-xs text-slate-600">Your data is yours alone</p>
-                            </div>
-                        </div>
-                        <div className="flex items-start gap-3">
-                            <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-                                <div className="w-2 h-2 rounded-full bg-blue-600" />
-                            </div>
-                            <div>
-                                <p className="text-sm font-medium text-slate-900">Instant sync</p>
-                                <p className="text-xs text-slate-600">Access from anywhere</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {/* Right Page (Login Form) */}
-            <div className="flex-1 p-6 md:p-12 bg-white flex flex-col">
                 <div className="mb-6">
                     <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-2">
                         Welcome back.
@@ -214,6 +179,50 @@ function LoginForm({ onBack, onSignupClick }: LoginFormProps) {
                         </button>
                     </p>
                 </form>
+            </div>
+
+            {/* Left Section - Secure Access Info (Shows SECOND on mobile, LEFT on desktop) */}
+            <div className="w-full md:w-1/2 md:order-1 p-6 md:p-12 bg-[#fafafa] md:border-r border-slate-100 flex flex-col">
+                <Button
+                    onClick={onBack}
+                    variant="ghost"
+                    className="w-fit mb-6 text-slate-600 hover:text-slate-900 p-0 hidden md:flex"
+                >
+                    <ArrowLeft size={18} className="mr-2" />
+                    <span className="text-xs uppercase font-bold">Back</span>
+                </Button>
+
+                <div className="flex-1 flex flex-col justify-center space-y-6">
+                    <div>
+                        <h3 className="text-2xl md:text-3xl font-bold text-slate-900 mb-3">
+                            Secure Access
+                        </h3>
+                        <p className="text-slate-600 text-sm md:text-base leading-relaxed">
+                            Your work data is encrypted and protected. Sign in to access your personalized dashboard.
+                        </p>
+                    </div>
+
+                    <div className="space-y-3">
+                        <div className="flex items-start gap-3">
+                            <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <div className="w-2 h-2 rounded-full bg-blue-600" />
+                            </div>
+                            <div>
+                                <p className="text-sm font-medium text-slate-900">End-to-end encryption</p>
+                                <p className="text-xs text-slate-600">Your data is yours alone</p>
+                            </div>
+                        </div>
+                        <div className="flex items-start gap-3">
+                            <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <div className="w-2 h-2 rounded-full bg-blue-600" />
+                            </div>
+                            <div>
+                                <p className="text-sm font-medium text-slate-900">Instant sync</p>
+                                <p className="text-xs text-slate-600">Access from anywhere</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             {/* Center Binding Crease */}
