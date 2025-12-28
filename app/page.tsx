@@ -189,7 +189,7 @@ export default function TheMidnightBook() {
             inset: 0,
             transform: "rotateY(180deg)"
           }}
-          className="bg-white shadow-2xl rounded-lg md:rounded-r-lg overflow-hidden"
+          className="bg-white shadow-2xl rounded-lg md:rounded-r-lg overflow-y-auto md:overflow-hidden"
         >
           {showLogin && <LoginForm onBack={handleBackToFeatures} onSignupClick={handleSignupClick} />}
           {showSignup && (
