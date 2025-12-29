@@ -7,11 +7,11 @@ export default function ViewLayout({
     children: React.ReactNode;
 }) {
     return (
-        <div className="flex h-screen">
+        <div className="flex h-screen overflow-hidden">
             <Sidebar />
-            <div className="flex-1 flex flex-col">
+            <div className="flex-1 flex flex-col overflow-hidden">
                 <TopBar userName="User" />
-                <main className="flex-1 overflow-auto">
+                <main className="flex-1 overflow-y-auto overflow-x-hidden">
                     {children}
                 </main>
             </div>
