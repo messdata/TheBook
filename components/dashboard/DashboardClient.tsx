@@ -48,6 +48,9 @@ import { useRoster } from "@/app/context/RosterContext";
 import { supabase } from "@/lib/supabase";
 import { TooltipPortal, TooltipArrow } from "@radix-ui/react-tooltip";
 
+// Import Share Tech Mono font
+import "@fontsource/share-tech-mono";
+
 // Register Chart.js components
 ChartJS.register(
     CategoryScale,
@@ -660,13 +663,13 @@ export default function DashboardClient() {
                                     </div>
                                 </CardHeader>
                                 <CardContent className="flex gap-6 items-center px-6 pb-6 h-[calc(100%-4rem)]">
-                                    {/* Left: Calendar with a subtle container to make it "pop" */}
-                                    <div className="flex-shrink-0 p-2 rounded-2xl bg-slate-50/50 dark:bg-neutral-950/30 border border-slate-100 dark:border-neutral-800/50 shadow-inner">
+                                    {/* Left: Calendar with a subtle container - HIDDEN ON MOBILE */}
+                                    <div className="hidden md:block flex-shrink-0 p-2 rounded-2xl bg-slate-50/50 dark:bg-neutral-950/30 border border-slate-100 dark:border-neutral-800/50 shadow-inner">
                                         <FullMonthCalendar />
                                     </div>
 
-                                    {/* Right: Info Section with Divider */}
-                                    <div className="flex-1 space-y-4 min-w-0 border-l border-slate-100 dark:border-neutral-800/50 pl-6 h-full flex flex-col justify-center items-center">
+                                    {/* Right: Info Section - FULL WIDTH ON MOBILE */}
+                                    <div className="flex-1 space-y-4 min-w-0 md:border-l border-slate-100 dark:border-neutral-800/50 md:pl-6 h-full flex flex-col justify-center items-center">
 
                                         {/* Next Shift Section */}
                                         <div className="group/item flex flex-col items-center w-full">
@@ -712,18 +715,18 @@ export default function DashboardClient() {
                                     {/* Highest Income Week */}
                                     <div className="group relative flex flex-col p-5 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 dark:from-emerald-600 dark:to-teal-700 shadow-lg hover:shadow-xl transition-all hover:scale-[1.02]">
                                         <div className="space-y-2">
-                                            <p className="text-[10px] font-extrabold uppercase tracking-widest text-emerald-100">
+                                            <p className="text-[10px] font-normal uppercase tracking-widest text-emerald-100" style={{ fontFamily: "'Share Tech Mono', monospace" }}>
                                                 Highest Income Week
                                             </p>
                                             <div className="flex items-baseline gap-2">
-                                                <p className="text-sm font-bold text-white">
+                                                <p className="text-sm font-normal text-white" style={{ fontFamily: "'Share Tech Mono', monospace" }}>
                                                     {highestIncomeWeek.week !== "N/A"
                                                         ? `Week ${Math.ceil((new Date(highestIncomeWeek.week).getTime() - new Date(new Date(highestIncomeWeek.week).getFullYear(), 0, 1).getTime()) / (7 * 24 * 60 * 60 * 1000))}`
                                                         : "No Data"
                                                     }
                                                 </p>
                                             </div>
-                                            <p className="text-2xl font-black text-white">
+                                            <p className="text-2xl font-normal text-white" style={{ fontFamily: "'Share Tech Mono', monospace" }}>
                                                 {getCurrencySymbol(currency)}{highestIncomeWeek.amount.toFixed(2)}
                                             </p>
                                         </div>
@@ -732,18 +735,18 @@ export default function DashboardClient() {
                                     {/* Highest Spent Week */}
                                     <div className="group relative flex flex-col p-5 rounded-2xl bg-gradient-to-br from-rose-500 to-pink-600 dark:from-rose-600 dark:to-pink-700 shadow-lg hover:shadow-xl transition-all hover:scale-[1.02]">
                                         <div className="space-y-2">
-                                            <p className="text-[10px] font-extrabold uppercase tracking-widest text-rose-100">
+                                            <p className="text-[10px] font-normal uppercase tracking-widest text-rose-100" style={{ fontFamily: "'Share Tech Mono', monospace" }}>
                                                 Highest Spent Week
                                             </p>
                                             <div className="flex items-baseline gap-2">
-                                                <p className="text-sm font-bold text-white">
+                                                <p className="text-sm font-normal text-white" style={{ fontFamily: "'Share Tech Mono', monospace" }}>
                                                     {highestSpentWeek.week !== "N/A"
                                                         ? `Week ${Math.ceil((new Date(highestSpentWeek.week).getTime() - new Date(new Date(highestSpentWeek.week).getFullYear(), 0, 1).getTime()) / (7 * 24 * 60 * 60 * 1000))}`
                                                         : "No Data"
                                                     }
                                                 </p>
                                             </div>
-                                            <p className="text-2xl font-black text-white">
+                                            <p className="text-2xl font-normal text-white" style={{ fontFamily: "'Share Tech Mono', monospace" }}>
                                                 {getCurrencySymbol(currency)}{highestSpentWeek.amount.toFixed(2)}
                                             </p>
                                         </div>
@@ -752,13 +755,13 @@ export default function DashboardClient() {
                                     {/* Highest Subscription */}
                                     <div className="group relative flex flex-col p-5 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 dark:from-amber-600 dark:to-orange-700 shadow-lg hover:shadow-xl transition-all hover:scale-[1.02]">
                                         <div className="space-y-2">
-                                            <p className="text-[10px] font-extrabold uppercase tracking-widest text-amber-100">
+                                            <p className="text-[10px] font-normal uppercase tracking-widest text-amber-100" style={{ fontFamily: "'Share Tech Mono', monospace" }}>
                                                 Highest Subscription
                                             </p>
-                                            <p className="text-sm font-bold text-white truncate">
+                                            <p className="text-sm font-normal text-white truncate" style={{ fontFamily: "'Share Tech Mono', monospace" }}>
                                                 {highestSubscription.name}
                                             </p>
-                                            <p className="text-2xl font-black text-white">
+                                            <p className="text-2xl font-normal text-white" style={{ fontFamily: "'Share Tech Mono', monospace" }}>
                                                 {getCurrencySymbol(currency)}{highestSubscription.amount.toFixed(2)}
                                             </p>
                                         </div>
@@ -767,13 +770,13 @@ export default function DashboardClient() {
                                     {/* Most Spent Category */}
                                     <div className="group relative flex flex-col p-5 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 dark:from-blue-600 dark:to-indigo-700 shadow-lg hover:shadow-xl transition-all hover:scale-[1.02]">
                                         <div className="space-y-2">
-                                            <p className="text-[10px] font-extrabold uppercase tracking-widest text-blue-100">
+                                            <p className="text-[10px] font-normal uppercase tracking-widest text-blue-100" style={{ fontFamily: "'Share Tech Mono', monospace" }}>
                                                 Most Spent Category
                                             </p>
-                                            <p className="text-sm font-bold text-white capitalize truncate">
+                                            <p className="text-sm font-normal text-white capitalize truncate" style={{ fontFamily: "'Share Tech Mono', monospace" }}>
                                                 {mostSpentCategory.category}
                                             </p>
-                                            <p className="text-2xl font-black text-white">
+                                            <p className="text-2xl font-normal text-white" style={{ fontFamily: "'Share Tech Mono', monospace" }}>
                                                 {getCurrencySymbol(currency)}{mostSpentCategory.amount.toFixed(2)}
                                             </p>
                                         </div>
@@ -881,20 +884,23 @@ export default function DashboardClient() {
                             {/* Chart */}
                             <Card className="md:col-span-2 lg:col-span-2 bento-card bg-white/80 dark:bg-neutral-900/80 backdrop-blur-sm border-slate-200 dark:border-neutral-800">
                                 <CardHeader className="pb-3">
-                                    <div className="flex flex-row items-center justify-between">
-                                        <div className="flex items-center gap-2">
+                                    <div className="flex flex-row items-start justify-between">
+                                        <div className="flex flex-col gap-1">
                                             <CardTitle className="text-base md:text-lg text-slate-700 dark:text-neutral-200">
                                                 Weekly Hours Overview
                                             </CardTitle>
                                             <RadixTooltip>
                                                 <TooltipTrigger asChild>
-                                                    <Info className="w-4 h-4 text-slate-400 hover:text-slate-600 cursor-help transition-colors" />
+                                                    <div className="flex items-center gap-1 text-xs text-slate-400 hover:text-slate-600 cursor-help transition-colors">
+                                                        <Info className="w-3.5 h-3.5" />
+                                                        <span className="text-[10px]">Info</span>
+                                                    </div>
                                                 </TooltipTrigger>
                                                 {/* The TooltipPortal is the key to stopping the layout shift */}
                                                 <TooltipPortal>
                                                     <TooltipContent
                                                         side="bottom"
-                                                        align="end"
+                                                        align="start"
                                                         sideOffset={10}
                                                         className="z-[100] w-64 rounded-lg border border-slate-200 bg-white/95 p-3 shadow-xl backdrop-blur-md dark:border-neutral-800 dark:bg-neutral-900/95"
                                                     >
@@ -932,7 +938,7 @@ export default function DashboardClient() {
                                         </DropdownMenu>
                                     </div>
                                 </CardHeader>
-                                <CardContent className="h-64 md:h-80">
+                                <CardContent className="h-48 sm:h-56 md:h-64 lg:h-80">
                                     <Line data={chartData} options={chartOptions} />
                                 </CardContent>
                             </Card>
