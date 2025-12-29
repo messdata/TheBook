@@ -108,7 +108,7 @@ export default function PreferencesTab({ userId, initialData, onUpdate }: Prefer
               <Label className="text-sm font-semibold text-slate-700 dark:text-neutral-300">
                 Week Starts On
               </Label>
-              <div className="grid grid-cols-3 gap-3 mt-2">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-2 md:gap-3 mt-2">
                 {[
                   { value: 0, label: 'Sunday', abbr: 'SUN' },
                   { value: 1, label: 'Monday', abbr: 'MON' },
@@ -122,15 +122,15 @@ export default function PreferencesTab({ userId, initialData, onUpdate }: Prefer
                     key={day.value}
                     type="button"
                     onClick={() => setFormData({ ...formData, weekStartDay: day.value })}
-                    className={`p-4 rounded-xl border-2 transition-all ${formData.weekStartDay === day.value
+                    className={`p-3 md:p-4 rounded-xl border-2 transition-all ${formData.weekStartDay === day.value
                       ? 'border-blue-600 bg-blue-50 dark:bg-blue-900/20'
                       : 'border-slate-200 dark:border-neutral-700 hover:border-blue-300 dark:hover:border-blue-700'
                       }`}
                   >
-                    <div className="text-xs font-bold text-slate-500 dark:text-neutral-500 mb-1">
+                    <div className="text-[10px] md:text-xs font-bold text-slate-500 dark:text-neutral-500 mb-0.5 md:mb-1">
                       {day.abbr}
                     </div>
-                    <div className="text-sm font-semibold text-slate-900 dark:text-white">
+                    <div className="text-[10px] md:text-sm font-semibold text-slate-900 dark:text-white truncate">
                       {day.label}
                     </div>
                   </button>
