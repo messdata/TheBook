@@ -385,8 +385,8 @@ export default function ViewClient() {
     };
 
     return (
-        <div className="h-full w-full bg-gradient-to-br from-slate-50 via-gray-50 to-zinc-50 dark:from-black dark:via-neutral-950 dark:to-zinc-950 overflow-auto">
-            <motion.div variants={containerVariants} initial="hidden" animate="show" className="max-w-7xl mx-auto p-6 space-y-6">
+        <div className="h-full w-full bg-gradient-to-br from-slate-50 via-gray-50 to-zinc-50 dark:from-black dark:via-neutral-950 dark:to-zinc-950 overflow-y-auto overflow-x-hidden">
+            <motion.div variants={containerVariants} initial="hidden" animate="show" className="w-full max-w-7xl mx-auto p-4 md:p-6 space-y-6">
 
                 {/* Page Title */}
                 <motion.div
@@ -399,39 +399,39 @@ export default function ViewClient() {
                 </motion.div>
 
                 {/* Summary Cards */}
-                <motion.div variants={containerVariants} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <motion.div variants={containerVariants} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
                     {[
                         { label: "Monthly Subs", value: `${getCurrencySymbol(currency)}${monthlySubsTotal.toFixed(2)}`, trend: `${subscriptions.filter(s => s.frequency === "monthly" && s.is_active).length} active` },
                         { label: "Weekly Subs", value: `${getCurrencySymbol(currency)}${weeklySubsTotal.toFixed(2)}`, trend: `~${getCurrencySymbol(currency)}${(weeklySubsTotal / 4.33).toFixed(2)}/wk` },
                         { label: "Total Spending", value: `${getCurrencySymbol(currency)}${totalSpending.toFixed(2)}`, trend: `${spending.length} transactions` },
                         { label: "Savings Rate", value: `${savingsRate}%`, trend: `${getCurrencySymbol(currency)}${(monthlyIncome - totalSpending).toFixed(2)} saved` },
                     ].map((stat, i) => (
-                        <motion.div key={i} variants={itemVariants} whileHover={{ y: -5, scale: 1.02 }} className="group relative p-6 rounded-[2rem] bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800 shadow-sm hover:shadow-2xl transition-all">
-                            <div className="flex justify-between items-start mb-4">
-                                <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{stat.label}</p>
-                                <div className="p-2 rounded-full bg-slate-50 dark:bg-neutral-800 group-hover:bg-blue-50 dark:group-hover:bg-blue-900/20 transition-colors">
-                                    <ArrowUpRight className="w-3 h-3 text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400" />
+                        <motion.div key={i} variants={itemVariants} whileHover={{ y: -5, scale: 1.02 }} className="group relative p-4 md:p-6 rounded-2xl md:rounded-[2rem] bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800 shadow-sm hover:shadow-2xl transition-all">
+                            <div className="flex justify-between items-start mb-3 md:mb-4">
+                                <p className="text-[10px] md:text-[11px] font-bold uppercase tracking-widest text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{stat.label}</p>
+                                <div className="p-1.5 md:p-2 rounded-full bg-slate-50 dark:bg-neutral-800 group-hover:bg-blue-50 dark:group-hover:bg-blue-900/20 transition-colors">
+                                    <ArrowUpRight className="w-2.5 h-2.5 md:w-3 md:h-3 text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400" />
                                 </div>
                             </div>
-                            <h2 className="text-3xl font-bold tracking-tighter text-slate-900 dark:text-white">{stat.value}</h2>
-                            <p className="text-xs font-semibold text-slate-400 mt-2"><span className="text-emerald-500 bg-emerald-50 dark:bg-emerald-500/10 px-1.5 py-0.5 rounded">{stat.trend}</span></p>
+                            <h2 className="text-2xl md:text-3xl font-bold tracking-tighter text-slate-900 dark:text-white">{stat.value}</h2>
+                            <p className="text-[10px] md:text-xs font-semibold text-slate-400 mt-1.5 md:mt-2"><span className="text-emerald-500 bg-emerald-50 dark:bg-emerald-500/10 px-1.5 py-0.5 rounded">{stat.trend}</span></p>
                         </motion.div>
                     ))}
                 </motion.div>
 
                 {/* Main Content */}
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6 lg:gap-8">
 
                     {/* Subscriptions */}
-                    <motion.div variants={itemVariants} className="lg:col-span-7 space-y-6">
-                        <div className="flex items-center justify-between px-2">
-                            <h3 className="text-sm font-bold uppercase tracking-widest text-slate-500">Subscriptions</h3>
-                            <Button onClick={() => { resetForms(); setShowSubModal(true); }} className="rounded-xl bg-slate-900 dark:bg-white text-white dark:text-black hover:bg-slate-800 dark:hover:bg-neutral-200">
-                                <Plus className="w-4 h-4 mr-2" /> Add
+                    <motion.div variants={itemVariants} className="lg:col-span-7 space-y-4 md:space-y-6">
+                        <div className="flex items-center justify-between px-1 md:px-2">
+                            <h3 className="text-xs md:text-sm font-bold uppercase tracking-widest text-slate-500">Subscriptions</h3>
+                            <Button onClick={() => { resetForms(); setShowSubModal(true); }} className="rounded-xl bg-slate-900 dark:bg-white text-white dark:text-black hover:bg-slate-800 dark:hover:bg-neutral-200 text-xs md:text-sm h-8 md:h-10">
+                                <Plus className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2" /> Add
                             </Button>
                         </div>
 
-                        <div className="space-y-3">
+                        <div className="space-y-2 md:space-y-3">
                             {subscriptions.length === 0 ? (
                                 <div className="text-center py-12 text-slate-500 dark:text-neutral-500">
                                     <p className="text-sm">No subscriptions yet. Add your first one!</p>
@@ -440,28 +440,57 @@ export default function ViewClient() {
                                 subscriptions.map((sub, idx) => {
                                     const Icon = getCategoryIcon(sub.category);
                                     return (
-                                        <motion.div key={sub.id} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: idx * 0.1 }} whileHover={{ scale: 1.01 }} className="group flex items-center justify-between p-4 rounded-3xl bg-white/40 dark:bg-neutral-900/40 border border-slate-200/50 dark:border-neutral-800/50 backdrop-blur-sm hover:shadow-lg hover:border-blue-200 dark:hover:border-blue-900/50 transition-all">
-                                            <div className="flex items-center gap-5">
-                                                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-sm">
-                                                    <Icon className="w-5 h-5 text-white" />
+                                        <motion.div key={sub.id} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: idx * 0.1 }} whileHover={{ scale: 1.01 }} className="group p-3 md:p-4 rounded-2xl md:rounded-3xl bg-white/40 dark:bg-neutral-900/40 border border-slate-200/50 dark:border-neutral-800/50 backdrop-blur-sm hover:shadow-lg hover:border-blue-200 dark:hover:border-blue-900/50 transition-all">
+                                            {/* Mobile: Stacked Layout */}
+                                            <div className="flex md:hidden flex-col gap-3">
+                                                <div className="flex items-center justify-between">
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                                                            <Icon className="w-4 h-4 text-white" />
+                                                        </div>
+                                                        <div>
+                                                            <p className="text-xs font-bold text-slate-900 dark:text-white">{sub.name}</p>
+                                                            <p className="text-[10px] text-slate-400 font-medium">{sub.frequency}</p>
+                                                        </div>
+                                                    </div>
+                                                    <p className="text-sm font-black text-blue-600 dark:text-blue-400">{getCurrencySymbol(currency)}{sub.amount.toFixed(2)}</p>
                                                 </div>
-                                                <div>
-                                                    <p className="text-sm font-bold text-slate-900 dark:text-white">{sub.name}</p>
-                                                    <p className="text-xs text-slate-400 font-medium mt-0.5">{sub.frequency} • {sub.is_active ? 'Active' : 'Inactive'}</p>
-                                                    <p className="text-3xl font-bold">
-                                                        {getCurrencySymbol(currency)}{monthlySubsTotal.toFixed(2)}
-                                                    </p>
+                                                <div className="flex items-center justify-between">
+                                                    <span className={`text-[10px] font-semibold px-2 py-0.5 rounded ${sub.is_active ? 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'}`}>
+                                                        {sub.is_active ? 'Active' : 'Inactive'}
+                                                    </span>
+                                                    <div className="flex gap-1">
+                                                        <button onClick={() => handleEditSub(sub)} className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-slate-200 dark:hover:bg-neutral-700">
+                                                            <Edit className="w-3 h-3 text-slate-500" />
+                                                        </button>
+                                                        <button onClick={() => handleDeleteSub(sub.id)} className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-red-100 dark:hover:bg-red-900/20">
+                                                            <Trash2 className="w-3 h-3 text-red-500" />
+                                                        </button>
+                                                    </div>
                                                 </div>
                                             </div>
-                                            <div className="flex items-center gap-4">
-                                                <p className="text-sm font-black text-blue-600 dark:text-blue-400">{getCurrencySymbol(currency)}{sub.amount.toFixed(2)}</p>
-                                                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    <button onClick={() => handleEditSub(sub)} className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-slate-200 dark:hover:bg-neutral-700">
-                                                        <Edit className="w-4 h-4 text-slate-500" />
-                                                    </button>
-                                                    <button onClick={() => handleDeleteSub(sub.id)} className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-red-100 dark:hover:bg-red-900/20">
-                                                        <Trash2 className="w-4 h-4 text-red-500" />
-                                                    </button>
+
+                                            {/* Desktop: Horizontal Layout */}
+                                            <div className="hidden md:flex items-center justify-between">
+                                                <div className="flex items-center gap-4">
+                                                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-sm">
+                                                        <Icon className="w-5 h-5 text-white" />
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-sm font-bold text-slate-900 dark:text-white">{sub.name}</p>
+                                                        <p className="text-xs text-slate-400 font-medium mt-0.5">{sub.frequency} • {sub.is_active ? 'Active' : 'Inactive'}</p>
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center gap-4">
+                                                    <p className="text-sm font-black text-blue-600 dark:text-blue-400">{getCurrencySymbol(currency)}{sub.amount.toFixed(2)}</p>
+                                                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        <button onClick={() => handleEditSub(sub)} className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-slate-200 dark:hover:bg-neutral-700">
+                                                            <Edit className="w-4 h-4 text-slate-500" />
+                                                        </button>
+                                                        <button onClick={() => handleDeleteSub(sub.id)} className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-red-100 dark:hover:bg-red-900/20">
+                                                            <Trash2 className="w-4 h-4 text-red-500" />
+                                                        </button>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </motion.div>
@@ -472,15 +501,15 @@ export default function ViewClient() {
                     </motion.div>
 
                     {/* Spending */}
-                    <motion.div variants={itemVariants} className="lg:col-span-5 space-y-6">
-                        <div className="flex items-center justify-between px-2">
-                            <h3 className="text-sm font-bold uppercase tracking-widest text-slate-500">Recent Spending</h3>
-                            <Button onClick={() => { resetForms(); setShowSpendModal(true); }} className="rounded-xl bg-slate-900 dark:bg-white text-white dark:text-black hover:bg-slate-800 dark:hover:bg-neutral-200">
-                                <Plus className="w-4 h-4 mr-2" /> Add
+                    <motion.div variants={itemVariants} className="lg:col-span-5 space-y-4 md:space-y-6">
+                        <div className="flex items-center justify-between px-1 md:px-2">
+                            <h3 className="text-xs md:text-sm font-bold uppercase tracking-widest text-slate-500">Recent Spending</h3>
+                            <Button onClick={() => { resetForms(); setShowSpendModal(true); }} className="rounded-xl bg-slate-900 dark:bg-white text-white dark:text-black hover:bg-slate-800 dark:hover:bg-neutral-200 text-xs md:text-sm h-8 md:h-10">
+                                <Plus className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2" /> Add
                             </Button>
                         </div>
 
-                        <div className="space-y-3">
+                        <div className="space-y-2 md:space-y-3">
                             {spending.length === 0 ? (
                                 <div className="text-center py-12 text-slate-500 dark:text-neutral-500">
                                     <p className="text-sm">No spending recorded yet.</p>
@@ -489,28 +518,52 @@ export default function ViewClient() {
                                 spending.map((item, idx) => {
                                     const Icon = getCategoryIcon(item.category);
                                     return (
-                                        <motion.div key={item.id} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: idx * 0.1 }} whileHover={{ scale: 1.01 }} className="group flex items-center justify-between p-4 rounded-3xl bg-white/40 dark:bg-neutral-900/40 border border-slate-200/50 dark:border-neutral-800/50 backdrop-blur-sm hover:shadow-lg hover:border-blue-200 dark:hover:border-blue-900/50 transition-all">
-                                            <div className="flex items-center gap-4 flex-1 min-w-0">
-                                                <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-neutral-800 flex items-center justify-center">
-                                                    <Icon className="w-4 h-4 text-slate-600 dark:text-slate-400" />
+                                        <motion.div key={item.id} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: idx * 0.1 }} whileHover={{ scale: 1.01 }} className="group p-3 md:p-4 rounded-2xl md:rounded-3xl bg-white/40 dark:bg-neutral-900/40 border border-slate-200/50 dark:border-neutral-800/50 backdrop-blur-sm hover:shadow-lg hover:border-blue-200 dark:hover:border-blue-900/50 transition-all">
+                                            {/* Mobile: Stacked Layout */}
+                                            <div className="flex md:hidden flex-col gap-2">
+                                                <div className="flex items-center justify-between">
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="w-7 h-7 rounded-lg bg-slate-100 dark:bg-neutral-800 flex items-center justify-center">
+                                                            <Icon className="w-3 h-3 text-slate-600 dark:text-slate-400" />
+                                                        </div>
+                                                        <div>
+                                                            <p className="text-xs font-bold text-slate-900 dark:text-white">{item.description}</p>
+                                                            <p className="text-[10px] text-slate-400 font-medium">{new Date(item.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</p>
+                                                        </div>
+                                                    </div>
+                                                    <p className="text-sm font-black text-slate-900 dark:text-white">{getCurrencySymbol(currency)}{item.amount.toFixed(2)}</p>
                                                 </div>
-                                                <div className="min-w-0 flex-1">
-                                                    <p className="text-sm font-bold text-slate-900 dark:text-white truncate">{item.description}</p>
-                                                    <p className="text-xs text-slate-400 font-medium">{new Date(item.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</p>
-                                                    <p className="text-3xl font-bold">
-                                                        {getCurrencySymbol(currency)}{monthlySubsTotal.toFixed(2)}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                            <div className="flex items-center gap-3">
-                                                <p className="text-sm font-black text-slate-900 dark:text-white">{getCurrencySymbol(currency)}{item.amount.toFixed(2)}</p>
-                                                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <div className="flex justify-end gap-1">
                                                     <button onClick={() => handleEditSpend(item)} className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-slate-200 dark:hover:bg-neutral-700">
                                                         <Edit className="w-3 h-3 text-slate-500" />
                                                     </button>
                                                     <button onClick={() => handleDeleteSpend(item.id)} className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-red-100 dark:hover:bg-red-900/20">
                                                         <Trash2 className="w-3 h-3 text-red-500" />
                                                     </button>
+                                                </div>
+                                            </div>
+
+                                            {/* Desktop: Horizontal Layout */}
+                                            <div className="hidden md:flex items-center justify-between">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-neutral-800 flex items-center justify-center">
+                                                        <Icon className="w-4 h-4 text-slate-600 dark:text-slate-400" />
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-sm font-bold text-slate-900 dark:text-white">{item.description}</p>
+                                                        <p className="text-xs text-slate-400 font-medium">{new Date(item.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</p>
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center gap-3">
+                                                    <p className="text-sm font-black text-slate-900 dark:text-white">{getCurrencySymbol(currency)}{item.amount.toFixed(2)}</p>
+                                                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        <button onClick={() => handleEditSpend(item)} className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-slate-200 dark:hover:bg-neutral-700">
+                                                            <Edit className="w-3 h-3 text-slate-500" />
+                                                        </button>
+                                                        <button onClick={() => handleDeleteSpend(item.id)} className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-red-100 dark:hover:bg-red-900/20">
+                                                            <Trash2 className="w-3 h-3 text-red-500" />
+                                                        </button>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </motion.div>
@@ -523,14 +576,14 @@ export default function ViewClient() {
 
                 {/* Chart */}
                 <motion.div variants={itemVariants} className="w-full">
-                    <div className="p-6 rounded-[2rem] bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800 shadow-sm">
-                        <div className="flex items-center justify-between mb-6">
+                    <div className="p-4 md:p-6 rounded-2xl md:rounded-[2rem] bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800 shadow-sm">
+                        <div className="flex items-center justify-between mb-4 md:mb-6">
                             <div>
-                                <h3 className="text-lg font-bold text-slate-900 dark:text-white">Income vs Spending</h3>
-                                <p className="text-xs text-slate-500 dark:text-neutral-500 mt-1">Monthly analysis of your financial flow</p>
+                                <h3 className="text-base md:text-lg font-bold text-slate-900 dark:text-white">Income vs Spending</h3>
+                                <p className="text-[10px] md:text-xs text-slate-500 dark:text-neutral-500 mt-1">Monthly analysis of your financial flow</p>
                             </div>
                         </div>
-                        <div className="h-[300px]">
+                        <div className="h-[200px] sm:h-[250px] md:h-[300px]">
                             <Line data={chartData} options={chartOptions} />
                         </div>
                     </div>
