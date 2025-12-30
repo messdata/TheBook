@@ -237,20 +237,29 @@ export default function TheMidnightBook() {
           </motion.div>
         </motion.div>
 
+
         {/* BOOKMARK RIBBON */}
-        <motion.div
-          animate={{
-            y: isOpen ? 15 : 0,
-            height: isOpen ? "100px" : "80px",
-            opacity: (showLogin || showSignup) ? 0 : 1
-          }}
-          className="absolute top-[-10px] right-6 md:right-16 w-5 md:w-8 bg-red-700 shadow-md z-10 rounded-b-sm"
-        />
-      </div>
+
+        {/* BOOKMARK RIBBON
+ (Multiple changes for mobile view adjustments)
+  <motion.div
+    animate={{
+      y: isOpen ? 15 : 0,
+      height: isOpen ? "100px" : "80px",
+      opacity: (showLogin || showSignup) ? 0 : 1
+    }}
+    className="absolute top-[-10px] right-6 md:right-16 w-5 md:w-8 bg-red-700 shadow-md z-10 rounded-b-sm"
+
+  />
+
+        /> */}
+        (Multiple changes for mobile view adjustments)
+      </div >
 
       {/* FOOTER STATS */}
-      <motion.div
-        initial={{ opacity: 0 }}
+      < motion.div
+        initial={{ opacity: 0 }
+        }
         animate={{ opacity: 1 }}
         className="fixed bottom-4 left-0 w-full px-6 flex justify-between items-center text-[8px] md:text-[10px] font-mono text-slate-700 tracking-[0.2em] pointer-events-none"
       >
@@ -262,8 +271,8 @@ export default function TheMidnightBook() {
           <span className="hidden sm:inline">CLOUDSYNC ENABLED</span>
           <span>v2.0.1</span>
         </div>
-      </motion.div>
-    </div>
+      </motion.div >
+    </div >
   );
 }
 
@@ -282,4 +291,7 @@ function FeatureItem({ icon, label }: { icon: React.ReactNode, label: string }) 
       <ChevronRight size={12} className="text-slate-300" />
     </motion.div>
   );
+
 }
+
+
