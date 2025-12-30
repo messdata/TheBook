@@ -117,41 +117,40 @@ export default function ProfileClient() {
                     <p className="text-slate-600 dark:text-neutral-400">Manage your account settings and preferences</p>
                 </div>
 
-                {/* Tabs */}
-                <Tabs defaultValue="personal" className="w-full">
-                    <TabsList className="flex w-full h-auto p-1 bg-white/50 dark:bg-neutral-900/50 backdrop-blur-sm border border-slate-200 dark:border-neutral-800 rounded-2xl overflow-x-auto no-scrollbar">
-                        <TabsTrigger
-                            value="personal"
-                            className="flex-1 flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2 py-2.5 px-2 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-xl transition-all"
-                        >
-                            <User className="w-4 h-4" />
-                            <span className="text-[10px] md:text-sm font-medium">Info</span>
-                        </TabsTrigger>
+                {/* Tabs List - Optimized for Touch */}
+<TabsList className="grid w-full grid-cols-4 h-auto p-1.5 bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800 rounded-2xl shadow-sm">
+    <TabsTrigger 
+        value="personal" 
+        className="flex flex-col md:flex-row items-center justify-center gap-1.5 py-3 md:py-2.5 px-1 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-xl transition-all"
+    >
+        <User className="w-5 h-5 md:w-4 md:h-4" />
+        <span className="text-[10px] md:text-sm font-semibold tracking-tight">Info</span>
+    </TabsTrigger>
 
-                        <TabsTrigger
-                            value="work"
-                            className="flex-1 flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2 py-2.5 px-2 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-xl transition-all"
-                        >
-                            <Briefcase className="w-4 h-4" />
-                            <span className="text-[10px] md:text-sm font-medium">Work</span>
-                        </TabsTrigger>
+    <TabsTrigger 
+        value="work" 
+        className="flex flex-col md:flex-row items-center justify-center gap-1.5 py-3 md:py-2.5 px-1 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-xl transition-all"
+    >
+        <Briefcase className="w-5 h-5 md:w-4 md:h-4" />
+        <span className="text-[10px] md:text-sm font-semibold tracking-tight">Work</span>
+    </TabsTrigger>
 
-                        <TabsTrigger
-                            value="preferences"
-                            className="flex-1 flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2 py-2.5 px-2 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-xl transition-all"
-                        >
-                            <Settings className="w-4 h-4" />
-                            <span className="text-[10px] md:text-sm font-medium">Prefs</span>
-                        </TabsTrigger>
+    <TabsTrigger 
+        value="preferences" 
+        className="flex flex-col md:flex-row items-center justify-center gap-1.5 py-3 md:py-2.5 px-1 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-xl transition-all"
+    >
+        <Settings className="w-5 h-5 md:w-4 md:h-4" />
+        <span className="text-[10px] md:text-sm font-semibold tracking-tight">Prefs</span>
+    </TabsTrigger>
 
-                        <TabsTrigger
-                            value="security"
-                            className="flex-1 flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2 py-2.5 px-2 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-xl transition-all"
-                        >
-                            <Shield className="w-4 h-4" />
-                            <span className="text-[10px] md:text-sm font-medium">Safe</span>
-                        </TabsTrigger>
-                    </TabsList>
+    <TabsTrigger 
+        value="security" 
+        className="flex flex-col md:flex-row items-center justify-center gap-1.5 py-3 md:py-2.5 px-1 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-xl transition-all"
+    >
+        <Shield className="w-5 h-5 md:w-4 md:h-4" />
+        <span className="text-[10px] md:text-sm font-semibold tracking-tight">Safe</span>
+    </TabsTrigger>
+</TabsList>
 
                     {/* Tab Contents */}
                     <TabsContent value="personal" className="mt-6">
