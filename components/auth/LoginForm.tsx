@@ -233,5 +233,3 @@ function LoginForm({ onBack, onSignupClick }: LoginFormProps) {
 
 export default LoginForm;
 
-export default LoginForm;
-(Multiple changes for mobile view adjustments)
