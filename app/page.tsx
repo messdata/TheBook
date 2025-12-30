@@ -66,8 +66,43 @@ export default function TheMidnightBookPage() {
             exit={{ opacity: 0, x: -100 }}
             className="fixed left-150 top-1/2 -translate-y-1/2 z-[100] hidden lg:flex items-center gap-6 pointer-events-none"
           >
-            <span className="text-white text-5xl font-serif italic opacity-20">Click Me</span>
-            <div className="h-px w-32 bg-gradient-to-r from-blue-500/50 to-transparent" />
+            <motion.span
+              className="text-white text-5xl font-serif italic opacity-20 relative"
+              animate={{
+                textShadow: [
+                  "0 0 20px rgba(59, 130, 246, 0.5), 0 0 40px rgba(59, 130, 246, 0.3)",
+                  "0 0 30px rgba(59, 130, 246, 0.7), 0 0 60px rgba(59, 130, 246, 0.5)",
+                  "0 0 20px rgba(59, 130, 246, 0.5), 0 0 40px rgba(59, 130, 246, 0.3)",
+                ],
+                opacity: [0.2, 0.4, 0.2]
+              }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                ease: "easeInOut"
+              }}
+              style={{
+                filter: "drop-shadow(0 4px 12px rgba(0, 0, 0, 0.4))"
+              }}
+            >
+              Click Me
+            </motion.span>
+            <motion.div
+              className="h-px w-32 bg-gradient-to-r from-blue-500/50 to-transparent"
+              animate={{
+                opacity: [0.5, 1, 0.5],
+                boxShadow: [
+                  "0 0 10px rgba(59, 130, 246, 0.3)",
+                  "0 0 20px rgba(59, 130, 246, 0.6)",
+                  "0 0 10px rgba(59, 130, 246, 0.3)",
+                ]
+              }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                ease: "easeInOut"
+              }}
+            />
           </motion.div>
         )}
       </AnimatePresence>
@@ -161,11 +196,16 @@ export default function TheMidnightBookPage() {
 
           {/* LEFT INTERIOR PAGE */}
           <div
-            className="absolute inset-0 bg-[#fcfcf9] rounded-l-sm border-r border-slate-200/50 p-2 md:p-3 flex flex-col justify-between"
+            className="absolute inset-0 bg-[#fcfcf9] rounded-l-sm border-r border-slate-200/50 p-4 md:p-8 lg:p-12 flex flex-col justify-between overflow-y-auto"
             style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}
           >
-            {/* Header */}
-            <div className="space-y-6 md:space-y-8">
+            {/* Header with fade-in animation */}
+            <motion.div
+              className="space-y-6 md:space-y-8"
+              initial={{ opacity: 0, y: 20 }}
+              animate={isOpen ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+              transition={{ delay: 0.8, duration: 0.6 }}
+            >
               <h2 className="text-3xl md:text-6xl font-serif text-slate-900 italic leading-tight">
                 Track. <br /> Visualize. <br /> Succeed.
               </h2>
@@ -177,46 +217,43 @@ export default function TheMidnightBookPage() {
                 </p>
               </div>
 
-              {/* Feature List */}
+              {/* Feature List with stagger animation */}
               <div className="space-y-3 pt-2">
-                <div className="flex items-start gap-3">
-                  <div className="w-1.5 h-1.5 rounded-full bg-blue-600 mt-2" />
-                  <div>
-                    <h3 className="text-sm font-semibold text-slate-900">Smart Scheduling</h3>
-                    <p className="text-xs text-slate-600 mt-0.5">Intelligent roster management with conflict detection</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="w-1.5 h-1.5 rounded-full bg-blue-600 mt-2" />
-                  <div>
-                    <h3 className="text-sm font-semibold text-slate-900">Pay Calculation</h3>
-                    <p className="text-xs text-slate-600 mt-0.5">Automatic overtime, breaks, and bonus tracking</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="w-1.5 h-1.5 rounded-full bg-blue-600 mt-2" />
-                  <div>
-                    <h3 className="text-sm font-semibold text-slate-900">Real-time Analytics</h3>
-                    <p className="text-xs text-slate-600 mt-0.5">Live insights into earnings and work patterns</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="w-1.5 h-1.5 rounded-full bg-blue-600 mt-2" />
-                  <div>
-                    <h3 className="text-sm font-semibold text-slate-900">Secure Archive</h3>
-                    <p className="text-xs text-slate-600 mt-0.5">Bank-grade encryption for your data</p>
-                  </div>
-                </div>
+                {[
+                  { title: "Smart Scheduling", desc: "Intelligent roster management with conflict detection" },
+                  { title: "Pay Calculation", desc: "Automatic overtime, breaks, and bonus tracking" },
+                  { title: "Real-time Analytics", desc: "Live insights into earnings and work patterns" },
+                  { title: "Secure Archive", desc: "Bank-grade encryption for your data" }
+                ].map((feature, index) => (
+                  <motion.div
+                    key={feature.title}
+                    className="flex items-start gap-3"
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={isOpen ? { opacity: 1, x: 0 } : { opacity: 0, x: -20 }}
+                    transition={{ delay: 1.0 + (index * 0.1), duration: 0.4 }}
+                  >
+                    <div className="w-1.5 h-1.5 rounded-full bg-blue-600 mt-2" />
+                    <div>
+                      <h3 className="text-sm font-semibold text-slate-900">{feature.title}</h3>
+                      <p className="text-xs text-slate-600 mt-0.5">{feature.desc}</p>
+                    </div>
+                  </motion.div>
+                ))}
               </div>
-            </div>
+            </motion.div>
 
-            {/* Footer */}
-            <div className="space-y-4">
+            {/* Footer with fade-in */}
+            <motion.div
+              className="space-y-4"
+              initial={{ opacity: 0 }}
+              animate={isOpen ? { opacity: 1 } : { opacity: 0 }}
+              transition={{ delay: 1.4, duration: 0.5 }}
+            >
               <div className="h-px w-full bg-slate-200" />
               <p className="text-[8px] md:text-[10px] font-mono text-blue-600 font-bold uppercase tracking-widest">
                 Entry_Log // 088
               </p>
-            </div>
+            </motion.div>
 
             {/* Right shadow gradient */}
             <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-black/[0.05] to-transparent pointer-events-none" />
