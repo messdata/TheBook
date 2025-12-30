@@ -673,4 +673,6 @@ function OnboardingForm({ onBack, currentStep, onStepChange }: OnboardingFormPro
 
     return renderStep();
 }
+
 export default OnboardingForm;
+
