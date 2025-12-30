@@ -1,297 +1,234 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
-import { Button } from "@/components/ui/button";
+import { motion, AnimatePresence, cubicBezier } from "framer-motion";
 import {
-  BookOpen,
-  Calendar,
-  DollarSign,
-  Zap,
-  Clock,
-  ChevronRight,
+  ArrowRight,
+  Plus,
+  ChevronLeft,
   MousePointerClick,
 } from "lucide-react";
-import LoginForm from "@/components/auth/LoginForm";
-import OnboardingForm from "@/components/auth/OnboardingForm";
+import LoginFormContent from "@/components/auth/LoginFormContent";
+import SignUpFormContent from "@/components/auth/SignUpFormContent";
 
-export default function TheMidnightBook() {
-  const router = useRouter();
+export default function TheMidnightBookPage() {
   const [isOpen, setIsOpen] = useState(false);
-  const [showLogin, setShowLogin] = useState(false);
-  const [showSignup, setShowSignup] = useState(false);
-  const [signupStep, setSignupStep] = useState(1);
+  const [view, setView] = useState<"landing" | "login" | "signup">("landing");
   const [mounted, setMounted] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
 
   useEffect(() => setMounted(true), []);
 
-  const handleLoginClick = () => {
-    if (!isOpen) setIsOpen(true);
-    setShowSignup(false);
-    setTimeout(() => setShowLogin(true), isOpen ? 0 : 600);
-  };
+  // Handle OAuth callback errors
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const error = params.get('error');
 
-  const handleSignupClick = () => {
-    if (!isOpen) setIsOpen(true);
-    setShowLogin(false);
-    setSignupStep(1);
-    setTimeout(() => setShowSignup(true), isOpen ? 0 : 600);
-  };
+      if (error) {
+        setIsOpen(true);
+        setView("login");
 
-  const handleBackToFeatures = () => {
-    setShowLogin(false);
-    setShowSignup(false);
-    setSignupStep(1);
-  };
+        switch (error) {
+          case 'no_account':
+            setAuthError('No account found. Please sign up first.');
+            break;
+          case 'account_exists':
+            setAuthError('Account exists. Please sign in instead.');
+            break;
+          case 'auth_failed':
+            setAuthError('Authentication failed. Please try again.');
+            break;
+          default:
+            setAuthError('An error occurred. Please try again.');
+        }
 
-  const handleSignupStepChange = (step: number) => {
-    setSignupStep(step);
-  };
+        window.history.replaceState({}, '', '/');
+      }
+    }
+  }, []);
 
   if (!mounted) return null;
 
+  const flipTransition = { duration: 1.6, ease: cubicBezier(0.19, 1, 0.22, 1) };
+
   return (
-    <div className="relative min-h-screen w-full flex items-center justify-center bg-[#050505] overflow-hidden p-4 md:p-8">
+    <div className="relative min-h-[100dvh] w-full flex items-center justify-center bg-[#080808] overflow-hidden p-4 sm:p-8">
+      {/* Dynamic Background */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(30,30,50,1)_0%,rgba(5,5,5,1)_100%)]" />
 
-      {/* Enhanced Ambient Background Glow */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] md:w-[600px] h-[300px] md:h-[600px] bg-blue-500/10 rounded-full blur-[80px] md:blur-[140px] pointer-events-none" />
-      <motion.div
-        animate={{
-          scale: [1, 1.1, 1],
-          opacity: [0.05, 0.08, 0.05]
-        }}
-        transition={{ duration: 8, repeat: Infinity }}
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] md:w-[800px] h-[400px] md:h-[800px] bg-indigo-500/5 rounded-full blur-[100px] md:blur-[150px] pointer-events-none"
-      />
+      {/* "CLICK ME" - Hidden on Mobile */}
+      <AnimatePresence>
+        {!isOpen && (
+          <motion.div
+            initial={{ opacity: 0, x: -30 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -100 }}
+            className="fixed left-150 top-1/2 -translate-y-1/2 z-[100] hidden lg:flex items-center gap-6 pointer-events-none"
+          >
+            <span className="text-white text-5xl font-serif italic opacity-20">Click Me</span>
+            <div className="h-px w-32 bg-gradient-to-r from-blue-500/50 to-transparent" />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      {/* THE BOOK STACK */}
-      <div className="relative w-full max-w-[900px] aspect-[0.7/1] md:aspect-[1.4/1] perspective-[2000px]">
+      {/* BOOK CONTAINER */}
+      <div className="relative w-full max-w-[1000px] aspect-[0.65/1] md:aspect-[1.5/1] [perspective:2500px] flex items-center justify-center scale-[0.75] xs:scale-90 sm:scale-100 transition-transform duration-500">
 
-        {/* Features Spread - Base Layer */}
-        <motion.div
-          animate={{
-            rotateY: (showLogin || showSignup) ? -180 : 0,
-            transition: { duration: 1.2, ease: [0.645, 0.045, 0.355, 1] }
-          }}
-          style={{
-            transformOrigin: "left center",
-            backfaceVisibility: "hidden",
-            position: "absolute",
-            inset: 0
-          }}
-          className="flex flex-col md:flex-row bg-white shadow-2xl rounded-lg md:rounded-r-lg overflow-hidden"
-        >
-          {/* Left Page (Intro) */}
-          <div className="flex-1 p-6 md:p-12 border-b md:border-b-0 md:border-r border-slate-100 flex flex-col justify-between bg-[#fafafa]">
-            <div className="space-y-4 md:space-y-6">
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: isOpen ? 1 : 0 }}
-                transition={{ delay: 0.3, type: "spring", stiffness: 200 }}
-                className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center text-white shadow-lg"
-              >
-                <BookOpen size={18} />
-              </motion.div>
-
-              <motion.h2
-                initial={{ opacity: 0, y: 20 }}
-                animate={isOpen ? { opacity: 1, y: 0 } : {}}
-                className="text-2xl md:text-4xl font-bold text-slate-900 leading-tight"
-              >
-                Your Work, <br />
-                <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                  Documented.
-                </span>
-              </motion.h2>
-
-              <motion.p
-                initial={{ opacity: 0, y: 20 }}
-                animate={isOpen ? { opacity: 1, y: 0 } : {}}
-                className="text-slate-500 max-w-xs leading-relaxed text-xs md:text-base"
-              >
-                A precision tool designed to turn your hours into visual data and clear earnings.
-              </motion.p>
-            </div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={isOpen ? { opacity: 1, y: 0 } : {}}
-              className="mt-4 flex flex-row gap-3"
-            >
-              <Button
-                onClick={handleSignupClick}
-                className="flex-1 md:flex-none bg-slate-900 text-white rounded-lg h-10 md:h-12 px-4 md:px-6 text-xs md:text-sm"
-              >
-                Create Entry
-              </Button>
-              <Button
-                onClick={handleLoginClick}
-                variant="ghost"
-                className="flex-1 md:flex-none text-slate-600 text-xs md:text-sm"
-              >
-                Sign In
-              </Button>
-            </motion.div>
-          </div>
-
-          {/* Right Page (Features) */}
-          <div className="flex-1 p-6 md:p-12 bg-white flex flex-col">
-            <motion.h3
-              initial={{ opacity: 0 }}
-              animate={isOpen ? { opacity: 1 } : {}}
-              className="text-[8px] md:text-[10px] font-black tracking-[0.3em] text-slate-300 uppercase mb-6 md:mb-10"
-            >
-              System_Capabilities
-            </motion.h3>
-
-            <div className="space-y-4 md:space-y-8">
-              {[
-                { icon: <Calendar size={16} />, label: "Shift Scheduling" },
-                { icon: <DollarSign size={16} />, label: "Wage Calculation" },
-                { icon: <Zap size={16} />, label: "Instant Analytics" },
-                { icon: <Clock size={16} />, label: "Overtime Tracking" }
-              ].map((item, idx) => (
+        {/* RIGHT PAGE - Embedded Forms */}
+        <div className="absolute right-0 w-1/2 h-full bg-[#fcfcf9] shadow-2xl rounded-r-sm overflow-hidden border-l border-slate-200/50">
+          <div className="h-full overflow-y-auto scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-transparent">
+            <AnimatePresence mode="wait">
+              {view === "landing" ? (
                 <motion.div
-                  key={idx}
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={isOpen ? { opacity: 1, x: 0 } : {}}
-                  transition={{ delay: 0.1 * idx }}
+                  key="landing"
+                  exit={{ opacity: 0 }}
+                  className="p-6 md:p-16 flex flex-col justify-center h-full space-y-8 md:space-y-12"
                 >
-                  <FeatureItem icon={item.icon} label={item.label} />
+                  <div className="space-y-2">
+                    <h3 className="text-xl md:text-3xl font-serif text-slate-900">Access Portal</h3>
+                    <p className="text-[8px] md:text-[10px] uppercase tracking-widest text-slate-400">Authorized Access Only</p>
+                  </div>
+                  <div className="space-y-3 md:space-y-4">
+                    <button
+                      onClick={() => setView("login")}
+                      className="w-full py-4 md:py-5 px-6 bg-slate-900 text-white flex justify-between items-center group active:scale-95 transition-transform hover:bg-black"
+                    >
+                      <span className="text-[9px] md:text-[10px] font-bold tracking-[0.3em]">SIGN IN</span>
+                      <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+                    </button>
+                    <button
+                      onClick={() => setView("signup")}
+                      className="w-full py-4 md:py-5 px-6 border-2 border-slate-300 flex justify-between items-center text-slate-900 active:scale-95 transition-transform hover:bg-slate-50"
+                    >
+                      <span className="text-[9px] md:text-[10px] font-bold tracking-[0.3em]">REGISTER</span>
+                      <Plus size={16} />
+                    </button>
+                  </div>
                 </motion.div>
-              ))}
-            </div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={isOpen ? { opacity: 1, y: 0 } : {}}
-              className="mt-auto p-3 md:p-4 bg-blue-50/50 border-l-2 border-blue-500 italic text-[10px] md:text-sm text-blue-700"
-            >
-              "The best way to predict your paycheck is to track it yourself."
-            </motion.div>
+              ) : (
+                <motion.div
+                  key={view}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="p-6 md:p-12"
+                >
+                  <button
+                    onClick={() => {
+                      setView("landing");
+                      setAuthError(null);
+                    }}
+                    className="mb-6 text-[9px] uppercase font-bold text-slate-400 hover:text-slate-900 transition-colors flex items-center gap-1"
+                  >
+                    <ChevronLeft size={12} /> Back
+                  </button>
+                  {view === "login" ? (
+                    <LoginFormContent onSuccess={() => { }} authError={authError} />
+                  ) : (
+                    <SignUpFormContent onSuccess={() => { }} />
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
+          {/* Left shadow gradient */}
+          <div className="absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-black/[0.05] to-transparent pointer-events-none" />
+        </div>
 
-          {/* Center Binding Crease */}
-          <div className="absolute left-1/2 top-0 bottom-0 w-8 -ml-4 bg-gradient-to-r from-black/5 via-black/10 to-transparent pointer-events-none hidden md:block" />
-        </motion.div>
-
-        {/* Login/Signup Spread - Flipped Layer */}
-        <motion.div
-          animate={{
-            rotateY: (showLogin || showSignup) ? 0 : 180,
-            transition: { duration: 1.2, ease: [0.645, 0.045, 0.355, 1] }
-          }}
-          style={{
-            transformOrigin: "left center",
-            backfaceVisibility: "hidden",
-            position: "absolute",
-            inset: 0,
-            transform: "rotateY(180deg)"
-          }}
-          className="bg-white shadow-2xl rounded-lg md:rounded-r-lg overflow-y-auto md:overflow-hidden"
-        >
-          {showLogin && <LoginForm onBack={handleBackToFeatures} onSignupClick={handleSignupClick} />}
-          {showSignup && (
-            <OnboardingForm
-              onBack={handleBackToFeatures}
-              currentStep={signupStep}
-              onStepChange={handleSignupStepChange}
-            />
-          )}
-        </motion.div>
-
-        {/* THE FRONT COVER */}
+        {/* FLIPPING COVER */}
         <motion.div
           onClick={() => setIsOpen(!isOpen)}
-          animate={{
-            rotateY: isOpen ? -110 : 0,
-            transition: { duration: 1.2, ease: [0.645, 0.045, 0.355, 1] }
-          }}
-          style={{ transformOrigin: "left center", zIndex: isOpen ? 0 : 50 }}
-          className="absolute inset-0 bg-gradient-to-br from-[#0a0a0a] to-[#1a1a1a] shadow-[10px_0_50px_rgba(0,0,0,0.5)] rounded-lg border-l-[4px] border-slate-800 flex flex-col items-center justify-center cursor-pointer group overflow-hidden"
+          animate={{ rotateY: isOpen ? -180 : 0 }}
+          transition={flipTransition}
+          style={{ transformOrigin: "left center", zIndex: 50, transformStyle: "preserve-3d", left: "50%" }}
+          className="absolute top-0 w-1/2 h-full cursor-pointer"
         >
-          <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/leather.png')] opacity-20 pointer-events-none" />
-
-          <motion.div animate={{ opacity: isOpen ? 0 : 1 }} className="text-center relative z-10 px-4">
-            <h1
-              style={{ fontFamily: "'Caveat', cursive" }}
-              className="text-5xl md:text-8xl text-white mb-2 select-none"
-            >
-              The Book
-            </h1>
-            <div className="flex items-center justify-center gap-2 text-slate-500 tracking-[0.4em] text-[8px] md:text-[10px] uppercase">
-              <div className="h-px w-6 md:w-8 bg-slate-800" />
-              <span>Shift Ledger</span>
-              <div className="h-px w-6 md:w-8 bg-slate-800" />
-            </div>
-          </motion.div>
-
-          <motion.div
-            animate={{ y: [0, 5, 0], opacity: isOpen ? 0 : 1 }}
-            transition={{ duration: 2, repeat: Infinity }}
-            className="absolute bottom-8 flex flex-col items-center gap-2 text-slate-500"
+          {/* FRONT COVER */}
+          <div
+            className="absolute inset-0 bg-[#0f0f11] rounded-r-sm shadow-[20px_0_50px_rgba(0,0,0,0.6)] border-l-4 border-slate-800 flex flex-col items-center justify-center overflow-hidden"
+            style={{ backfaceVisibility: "hidden" }}
           >
-            <MousePointerClick size={18} />
-            <span className="text-[8px] md:text-[10px] uppercase tracking-widest font-bold">Tap to Open</span>
-          </motion.div>
+            <h1 className="text-4xl md:text-7xl font-serif text-white tracking-tighter">
+              The<span className="text-blue-500">.</span>Book
+            </h1>
+            {!isOpen && (
+              <div className="absolute bottom-10 flex flex-col items-center gap-2 text-white/20 animate-pulse">
+                <MousePointerClick size={20} />
+                <span className="text-[8px] uppercase tracking-widest">Tap to Open</span>
+              </div>
+            )}
+          </div>
+
+          {/* LEFT INTERIOR PAGE */}
+          <div
+            className="absolute inset-0 bg-[#fcfcf9] rounded-l-sm border-r border-slate-200/50 p-2 md:p-3 flex flex-col justify-between"
+            style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}
+          >
+            {/* Header */}
+            <div className="space-y-6 md:space-y-8">
+              <h2 className="text-3xl md:text-6xl font-serif text-slate-900 italic leading-tight">
+                Track. <br /> Visualize. <br /> Succeed.
+              </h2>
+
+              {/* Introduction Text */}
+              <div className="space-y-4 text-slate-700">
+                <p className="text-sm md:text-base leading-relaxed">
+                  Your comprehensive shift management system. Built for professionals who demand precision in time tracking and payroll calculations.
+                </p>
+              </div>
+
+              {/* Feature List */}
+              <div className="space-y-3 pt-2">
+                <div className="flex items-start gap-3">
+                  <div className="w-1.5 h-1.5 rounded-full bg-blue-600 mt-2" />
+                  <div>
+                    <h3 className="text-sm font-semibold text-slate-900">Smart Scheduling</h3>
+                    <p className="text-xs text-slate-600 mt-0.5">Intelligent roster management with conflict detection</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="w-1.5 h-1.5 rounded-full bg-blue-600 mt-2" />
+                  <div>
+                    <h3 className="text-sm font-semibold text-slate-900">Pay Calculation</h3>
+                    <p className="text-xs text-slate-600 mt-0.5">Automatic overtime, breaks, and bonus tracking</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="w-1.5 h-1.5 rounded-full bg-blue-600 mt-2" />
+                  <div>
+                    <h3 className="text-sm font-semibold text-slate-900">Real-time Analytics</h3>
+                    <p className="text-xs text-slate-600 mt-0.5">Live insights into earnings and work patterns</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="w-1.5 h-1.5 rounded-full bg-blue-600 mt-2" />
+                  <div>
+                    <h3 className="text-sm font-semibold text-slate-900">Secure Archive</h3>
+                    <p className="text-xs text-slate-600 mt-0.5">Bank-grade encryption for your data</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="space-y-4">
+              <div className="h-px w-full bg-slate-200" />
+              <p className="text-[8px] md:text-[10px] font-mono text-blue-600 font-bold uppercase tracking-widest">
+                Entry_Log // 088
+              </p>
+            </div>
+
+            {/* Right shadow gradient */}
+            <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-black/[0.05] to-transparent pointer-events-none" />
+          </div>
         </motion.div>
-
-
-        {/* BOOKMARK RIBBON */}
-
-        {/* BOOKMARK RIBBON
- (Multiple changes for mobile view adjustments)
-  <motion.div
-    animate={{
-      y: isOpen ? 15 : 0,
-      height: isOpen ? "100px" : "80px",
-      opacity: (showLogin || showSignup) ? 0 : 1
-    }}
-    className="absolute top-[-10px] right-6 md:right-16 w-5 md:w-8 bg-red-700 shadow-md z-10 rounded-b-sm"
-
-  />
-
-        /> */}
-        (Multiple changes for mobile view adjustments)
-      </div >
-
-      {/* FOOTER STATS */}
-      < motion.div
-        initial={{ opacity: 0 }
-        }
-        animate={{ opacity: 1 }}
-        className="fixed bottom-4 left-0 w-full px-6 flex justify-between items-center text-[8px] md:text-[10px] font-mono text-slate-700 tracking-[0.2em] pointer-events-none"
-      >
-        <div className="flex items-center gap-2">
-          <div className="w-1 h-1 rounded-full bg-green-500" />
-          SECURE
-        </div>
-        <div className="flex gap-4">
-          <span className="hidden sm:inline">CLOUDSYNC ENABLED</span>
-          <span>v2.0.1</span>
-        </div>
-      </motion.div >
-    </div >
-  );
-}
-
-function FeatureItem({ icon, label }: { icon: React.ReactNode, label: string }) {
-  return (
-    <motion.div
-      whileHover={{ x: 5 }}
-      className="flex items-center gap-3 md:gap-4 group cursor-default"
-    >
-      <div className="w-8 h-8 md:w-10 md:h-10 rounded-lg border border-slate-200 flex items-center justify-center text-slate-400 group-hover:border-blue-500 transition-all">
-        {icon}
       </div>
-      <span className="text-xs md:text-base text-slate-800 font-medium flex-1">
-        {label}
-      </span>
-      <ChevronRight size={12} className="text-slate-300" />
-    </motion.div>
+
+      {/* FOOTER */}
+      <div className="fixed bottom-4 md:bottom-6 w-full px-6 md:px-10 flex justify-between items-center opacity-30 text-[7px] sm:text-[8px] md:text-[10px] font-mono text-white tracking-widest pointer-events-none">
+        <span>EST. 2024</span>
+        <span className="uppercase">Secure Session</span>
+      </div>
+    </div>
   );
-
 }
-
-
