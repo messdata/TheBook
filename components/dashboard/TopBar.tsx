@@ -3,6 +3,7 @@
 import { Bell, Search, LogOut, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
+import NotificationBell from "@/components/NotificationBell";
 import {
   Tooltip,
   TooltipContent,
@@ -110,24 +111,7 @@ export default function TopBar({ userName }: TopBarProps) {
             {/* Theme Toggle */}
             <ThemeToggle />
 
-            {/* Notifications with Tooltip */}
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="relative rounded-xl hover:bg-white dark:hover:bg-neutral-800 hover:shadow-sm transition-all text-slate-500 dark:text-neutral-400"
-                  >
-                    <Bell className="w-5 h-5" />
-                    <span className="absolute top-2 right-2 w-2 h-2 bg-blue-500 rounded-full ring-2 ring-white dark:ring-neutral-900 animate-pulse"></span>
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="bottom" className="bg-slate-900 dark:bg-white text-white dark:text-slate-900 border-none">
-                  <p className="text-xs font-semibold">Coming Soon!</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <NotificationBell />
 
             {/* Profile Dropdown */}
             <DropdownMenu>
