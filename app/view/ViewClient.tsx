@@ -43,6 +43,7 @@ interface Subscription {
     frequency: "weekly" | "monthly";
     category: string;
     is_active: boolean;
+    renewal_day?: number;
 }
 
 interface Spending {
@@ -68,7 +69,14 @@ export default function ViewClient() {
     const [editingItem, setEditingItem] = useState<Subscription | Spending | null>(null);
     const [isEditing, setIsEditing] = useState(false);
 
-    const [subForm, setSubForm] = useState({ name: "", amount: "", frequency: "monthly" as "weekly" | "monthly", category: "entertainment" });
+    const [subForm, setSubForm] = useState({
+        name: "",
+        amount: "",
+        frequency: "monthly" as "weekly" | "monthly",
+        category: "entertainment",
+        renewal_day: 1, // Day of month (1-31) or day of week (0-6)
+        start_month: new Date().getMonth() + 1 // Current month (1-12)
+    });
     const [spendForm, setSpendForm] = useState({ description: "", amount: "", category: "food", date: new Date().toISOString().split('T')[0] });
 
     // Calculate totals
@@ -197,6 +205,7 @@ export default function ViewClient() {
             frequency: subForm.frequency,
             category: subForm.category,
             is_active: true,
+            renewal_day: subForm.renewal_day,
         };
 
         if (isEditing && editingItem && 'frequency' in editingItem) {
@@ -257,7 +266,14 @@ export default function ViewClient() {
     };
 
     const handleEditSub = (sub: Subscription) => {
-        setSubForm({ name: sub.name, amount: sub.amount.toString(), frequency: sub.frequency, category: sub.category });
+        setSubForm({
+            name: sub.name,
+            amount: sub.amount.toString(),
+            frequency: sub.frequency,
+            category: sub.category,
+            renewal_day: sub.renewal_day || 1,
+            start_month: new Date().getMonth() + 1
+        });
         setEditingItem(sub);
         setIsEditing(true);
         setShowSubModal(true);
@@ -283,7 +299,14 @@ export default function ViewClient() {
     };
 
     const resetForms = () => {
-        setSubForm({ name: "", amount: "", frequency: "monthly", category: "entertainment" });
+        setSubForm({
+            name: "",
+            amount: "",
+            frequency: "monthly",
+            category: "entertainment",
+            renewal_day: 1,
+            start_month: new Date().getMonth() + 1
+        });
         setSpendForm({ description: "", amount: "", category: "food", date: new Date().toISOString().split('T')[0] });
         setEditingItem(null);
         setIsEditing(false);
@@ -625,6 +648,66 @@ export default function ViewClient() {
                                             <option value="other">Other</option>
                                         </select>
                                     </div>
+
+                                    {/* Renewal Day Selector */}
+                                    <div>
+                                        <Label className="text-xs font-semibold text-slate-600 dark:text-neutral-400 uppercase tracking-wide">
+                                            {subForm.frequency === "monthly" ? "Renewal Day (Day of Month)" : "Renewal Day (Day of Week)"}
+                                        </Label>
+                                        <select
+                                            value={subForm.renewal_day}
+                                            onChange={(e) => setSubForm({ ...subForm, renewal_day: parseInt(e.target.value) })}
+                                            className="w-full h-11 px-3 rounded-xl border border-slate-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 mt-1 text-slate-900 dark:text-white"
+                                        >
+                                            {subForm.frequency === "monthly" ? (
+                                                // Days 1-31 for monthly
+                                                Array.from({ length: 31 }, (_, i) => i + 1).map(day => (
+                                                    <option key={day} value={day}>{day}</option>
+                                                ))
+                                            ) : (
+                                                // Days of week for weekly
+                                                <>
+                                                    <option value={0}>Sunday</option>
+                                                    <option value={1}>Monday</option>
+                                                    <option value={2}>Tuesday</option>
+                                                    <option value={3}>Wednesday</option>
+                                                    <option value={4}>Thursday</option>
+                                                    <option value={5}>Friday</option>
+                                                    <option value={6}>Saturday</option>
+                                                </>
+                                            )}
+                                        </select>
+                                    </div>
+
+                                    {/* Start Month (for first payment reference) */}
+                                    <div>
+                                        <Label className="text-xs font-semibold text-slate-600 dark:text-neutral-400 uppercase tracking-wide">First Payment Month</Label>
+                                        <select
+                                            value={subForm.start_month}
+                                            onChange={(e) => setSubForm({ ...subForm, start_month: parseInt(e.target.value) })}
+                                            className="w-full h-11 px-3 rounded-xl border border-slate-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 mt-1 text-slate-900 dark:text-white"
+                                        >
+                                            <option value={1}>January</option>
+                                            <option value={2}>February</option>
+                                            <option value={3}>March</option>
+                                            <option value={4}>April</option>
+                                            <option value={5}>May</option>
+                                            <option value={6}>June</option>
+                                            <option value={7}>July</option>
+                                            <option value={8}>August</option>
+                                            <option value={9}>September</option>
+                                            <option value={10}>October</option>
+                                            <option value={11}>November</option>
+                                            <option value={12}>December</option>
+                                        </select>
+                                        <p className="text-[10px] text-slate-500 dark:text-neutral-500 mt-1">
+                                            {subForm.frequency === "monthly"
+                                                ? `Renews on the ${subForm.renewal_day}${subForm.renewal_day === 1 ? 'st' : subForm.renewal_day === 2 ? 'nd' : subForm.renewal_day === 3 ? 'rd' : 'th'} of each month`
+                                                : `Renews every ${['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][subForm.renewal_day]}`
+                                            }
+                                        </p>
+                                    </div>
+
                                     <Button onClick={handleSaveSub} className="w-full h-12 bg-slate-900 dark:bg-white text-white dark:text-black hover:bg-slate-800 dark:hover:bg-neutral-200 rounded-xl font-bold">
                                         {isEditing ? 'Update' : 'Add'} Subscription
                                     </Button>
