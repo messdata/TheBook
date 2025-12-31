@@ -77,7 +77,15 @@ export default function ViewClient() {
         renewal_day: 1, // Day of month (1-31) or day of week (0-6)
         start_month: new Date().getMonth() + 1 // Current month (1-12)
     });
+    const [subFormErrors, setSubFormErrors] = useState({
+        name: "",
+        amount: ""
+    });
     const [spendForm, setSpendForm] = useState({ description: "", amount: "", category: "food", date: new Date().toISOString().split('T')[0] });
+    const [spendFormErrors, setSpendFormErrors] = useState({
+        description: "",
+        amount: ""
+    });
 
     // Calculate totals
     const monthlySubsTotal = subscriptions.filter(s => s.frequency === "monthly" && s.is_active).reduce((sum, s) => sum + s.amount, 0);
@@ -195,12 +203,52 @@ export default function ViewClient() {
         return icons[category] || Wallet;
     };
 
+    const validateSubForm = () => {
+        const errors = { name: "", amount: "" };
+        let isValid = true;
+
+        // Validate name
+        if (!subForm.name.trim()) {
+            errors.name = "Subscription name is required";
+            isValid = false;
+        } else if (subForm.name.trim().length < 2) {
+            errors.name = "Name must be at least 2 characters";
+            isValid = false;
+        }
+
+        // Validate amount
+        if (!subForm.amount) {
+            errors.amount = "Amount is required";
+            isValid = false;
+        } else {
+            const amount = parseFloat(subForm.amount);
+            if (isNaN(amount)) {
+                errors.amount = "Please enter a valid number";
+                isValid = false;
+            } else if (amount <= 0) {
+                errors.amount = "Amount must be greater than 0";
+                isValid = false;
+            } else if (amount > 99999) {
+                errors.amount = "Amount is too large";
+                isValid = false;
+            }
+        }
+
+        setSubFormErrors(errors);
+        return isValid;
+    };
+
     const handleSaveSub = async () => {
-        if (!userId || !subForm.name || !subForm.amount) return;
+        if (!userId) return;
+
+        // Validate form
+        if (!validateSubForm()) {
+            return;
+        }
 
         const subData = {
             user_id: userId,
-            name: subForm.name,
+            name: subForm.name.trim(),
             amount: parseFloat(subForm.amount),
             frequency: subForm.frequency,
             category: subForm.category,
@@ -231,12 +279,52 @@ export default function ViewClient() {
         resetForms();
     };
 
+    const validateSpendForm = () => {
+        const errors = { description: "", amount: "" };
+        let isValid = true;
+
+        // Validate description
+        if (!spendForm.description.trim()) {
+            errors.description = "Description is required";
+            isValid = false;
+        } else if (spendForm.description.trim().length < 2) {
+            errors.description = "Description must be at least 2 characters";
+            isValid = false;
+        }
+
+        // Validate amount
+        if (!spendForm.amount) {
+            errors.amount = "Amount is required";
+            isValid = false;
+        } else {
+            const amount = parseFloat(spendForm.amount);
+            if (isNaN(amount)) {
+                errors.amount = "Please enter a valid number";
+                isValid = false;
+            } else if (amount <= 0) {
+                errors.amount = "Amount must be greater than 0";
+                isValid = false;
+            } else if (amount > 99999) {
+                errors.amount = "Amount is too large";
+                isValid = false;
+            }
+        }
+
+        setSpendFormErrors(errors);
+        return isValid;
+    };
+
     const handleSaveSpend = async () => {
-        if (!userId || !spendForm.description || !spendForm.amount) return;
+        if (!userId) return;
+
+        // Validate form
+        if (!validateSpendForm()) {
+            return;
+        }
 
         const spendData = {
             user_id: userId,
-            description: spendForm.description,
+            description: spendForm.description.trim(),
             amount: parseFloat(spendForm.amount),
             category: spendForm.category,
             date: spendForm.date,
@@ -307,7 +395,9 @@ export default function ViewClient() {
             renewal_day: 1,
             start_month: new Date().getMonth() + 1
         });
+        setSubFormErrors({ name: "", amount: "" });
         setSpendForm({ description: "", amount: "", category: "food", date: new Date().toISOString().split('T')[0] });
+        setSpendFormErrors({ description: "", amount: "" });
         setEditingItem(null);
         setIsEditing(false);
     };
@@ -626,11 +716,35 @@ export default function ViewClient() {
                                 <div className="space-y-4">
                                     <div>
                                         <Label className="text-xs font-semibold text-slate-600 dark:text-neutral-400 uppercase tracking-wide">Name</Label>
-                                        <Input value={subForm.name} onChange={(e) => setSubForm({ ...subForm, name: e.target.value })} placeholder="Netflix, Spotify, etc." className="mt-1 h-11 rounded-xl" />
+                                        <Input
+                                            value={subForm.name}
+                                            onChange={(e) => {
+                                                setSubForm({ ...subForm, name: e.target.value });
+                                                if (subFormErrors.name) setSubFormErrors({ ...subFormErrors, name: "" });
+                                            }}
+                                            placeholder="Netflix, Spotify, etc."
+                                            className={`mt-1 h-11 rounded-xl ${subFormErrors.name ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}`}
+                                        />
+                                        {subFormErrors.name && (
+                                            <p className="text-xs text-red-500 mt-1 font-medium">{subFormErrors.name}</p>
+                                        )}
                                     </div>
                                     <div>
                                         <Label className="text-xs font-semibold text-slate-600 dark:text-neutral-400 uppercase tracking-wide">Amount ({getCurrencySymbol(currency)})</Label>
-                                        <Input type="number" value={subForm.amount} onChange={(e) => setSubForm({ ...subForm, amount: e.target.value })} placeholder="9.99" className="mt-1 h-11 rounded-xl" />
+                                        <Input
+                                            type="number"
+                                            step="0.01"
+                                            value={subForm.amount}
+                                            onChange={(e) => {
+                                                setSubForm({ ...subForm, amount: e.target.value });
+                                                if (subFormErrors.amount) setSubFormErrors({ ...subFormErrors, amount: "" });
+                                            }}
+                                            placeholder="9.99"
+                                            className={`mt-1 h-11 rounded-xl ${subFormErrors.amount ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}`}
+                                        />
+                                        {subFormErrors.amount && (
+                                            <p className="text-xs text-red-500 mt-1 font-medium">{subFormErrors.amount}</p>
+                                        )}
                                     </div>
                                     <div>
                                         <Label className="text-xs font-semibold text-slate-600 dark:text-neutral-400 uppercase tracking-wide">Frequency</Label>
@@ -730,11 +844,35 @@ export default function ViewClient() {
                                 <div className="space-y-4">
                                     <div>
                                         <Label className="text-xs font-semibold text-slate-600 dark:text-neutral-400 uppercase tracking-wide">Description</Label>
-                                        <Input value={spendForm.description} onChange={(e) => setSpendForm({ ...spendForm, description: e.target.value })} placeholder="Groceries, Coffee, etc." className="mt-1 h-11 rounded-xl" />
+                                        <Input
+                                            value={spendForm.description}
+                                            onChange={(e) => {
+                                                setSpendForm({ ...spendForm, description: e.target.value });
+                                                if (spendFormErrors.description) setSpendFormErrors({ ...spendFormErrors, description: "" });
+                                            }}
+                                            placeholder="Groceries, Coffee, etc."
+                                            className={`mt-1 h-11 rounded-xl ${spendFormErrors.description ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}`}
+                                        />
+                                        {spendFormErrors.description && (
+                                            <p className="text-xs text-red-500 mt-1 font-medium">{spendFormErrors.description}</p>
+                                        )}
                                     </div>
                                     <div>
                                         <Label className="text-xs font-semibold text-slate-600 dark:text-neutral-400 uppercase tracking-wide">Amount ({getCurrencySymbol(currency)})</Label>
-                                        <Input type="number" value={spendForm.amount} onChange={(e) => setSpendForm({ ...spendForm, amount: e.target.value })} placeholder="25.50" className="mt-1 h-11 rounded-xl" />
+                                        <Input
+                                            type="number"
+                                            step="0.01"
+                                            value={spendForm.amount}
+                                            onChange={(e) => {
+                                                setSpendForm({ ...spendForm, amount: e.target.value });
+                                                if (spendFormErrors.amount) setSpendFormErrors({ ...spendFormErrors, amount: "" });
+                                            }}
+                                            placeholder="25.50"
+                                            className={`mt-1 h-11 rounded-xl ${spendFormErrors.amount ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}`}
+                                        />
+                                        {spendFormErrors.amount && (
+                                            <p className="text-xs text-red-500 mt-1 font-medium">{spendFormErrors.amount}</p>
+                                        )}
                                     </div>
                                     <div>
                                         <Label className="text-xs font-semibold text-slate-600 dark:text-neutral-400 uppercase tracking-wide">Category</Label>
