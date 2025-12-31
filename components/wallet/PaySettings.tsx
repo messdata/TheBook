@@ -193,26 +193,39 @@ export default function PaySettings({ userId, initialData, onUpdate }: PaySettin
             </Select>
           </div>
 
-          <div className="p-6 bg-gradient-to-br from-blue-50/50 to-slate-50/50 dark:from-blue-950/20 dark:to-neutral-900/30 rounded-2xl border border-blue-100 dark:border-blue-900/30">
-            <div className="mb-4 flex items-center gap-2 text-xs text-slate-600 dark:text-neutral-400">
-              <Info className="w-4 h-4" />
-              <span>Select your recurring pay day - you'll get reminders 24 hours in advance</span>
+          <div className="p-4 sm:p-6 bg-gradient-to-br from-blue-50/50 to-slate-50/50 dark:from-blue-950/20 dark:to-neutral-900/30 rounded-2xl border border-blue-100 dark:border-blue-900/30">
+            <div className="mb-3 sm:mb-4 flex items-start gap-2 text-xs text-slate-600 dark:text-neutral-400">
+              <Info className="w-4 h-4 mt-0.5 flex-shrink-0" />
+              <span className="leading-relaxed">Select your recurring pay day - you'll get reminders 24 hours in advance</span>
             </div>
 
             {/* WEEKLY */}
             {formData.payFrequency === 'weekly' && (
-              <div className="grid grid-cols-7 gap-2">
-                {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day, i) => (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-2 md:gap-3">
+                {[
+                  { value: 1, label: 'Monday', abbr: 'MON' },
+                  { value: 2, label: 'Tuesday', abbr: 'TUE' },
+                  { value: 3, label: 'Wednesday', abbr: 'WED' },
+                  { value: 4, label: 'Thursday', abbr: 'THU' },
+                  { value: 5, label: 'Friday', abbr: 'FRI' },
+                  { value: 6, label: 'Saturday', abbr: 'SAT' },
+                  { value: 0, label: 'Sunday', abbr: 'SUN' },
+                ].map((day) => (
                   <button
-                    key={day}
+                    key={day.value}
                     type="button"
-                    onClick={() => setFormData({ ...formData, payDayWeekly: i + 1 })}
-                    className={`py-4 text-xs font-semibold rounded-xl transition-all ${formData.payDayWeekly === i + 1
-                        ? "bg-blue-600 text-white shadow-lg shadow-blue-500/30 scale-105"
-                        : "bg-white dark:bg-neutral-900 hover:bg-slate-100 dark:hover:bg-neutral-800 text-slate-600 dark:text-neutral-400 border border-slate-200 dark:border-neutral-800"
+                    onClick={() => setFormData({ ...formData, payDayWeekly: day.value })}
+                    className={`p-3 md:p-4 rounded-xl border-2 transition-all ${formData.payDayWeekly === day.value
+                      ? 'border-blue-600 bg-blue-50 dark:bg-blue-900/20'
+                      : 'border-slate-200 dark:border-neutral-700 hover:border-blue-300 dark:hover:border-blue-700'
                       }`}
                   >
-                    {day}
+                    <div className="text-[10px] md:text-xs font-bold text-slate-500 dark:text-neutral-500 mb-0.5 md:mb-1">
+                      {day.abbr}
+                    </div>
+                    <div className="text-[10px] md:text-sm font-semibold text-slate-900 dark:text-white truncate">
+                      {day.label}
+                    </div>
                   </button>
                 ))}
               </div>
@@ -220,51 +233,64 @@ export default function PaySettings({ userId, initialData, onUpdate }: PaySettin
 
             {/* FORTNIGHTLY */}
             {formData.payFrequency === 'fortnightly' && (
-              <div className="space-y-4">
+              <div className="space-y-3 sm:space-y-4">
                 {/* Day of week selection */}
                 <div className="space-y-2">
                   <Label className="text-xs font-semibold text-slate-700 dark:text-neutral-300">
                     Which day do you get paid?
                   </Label>
-                  <div className="grid grid-cols-7 gap-2">
-                    {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day, i) => (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-2 md:gap-3">
+                    {[
+                      { value: 1, label: 'Monday', abbr: 'MON' },
+                      { value: 2, label: 'Tuesday', abbr: 'TUE' },
+                      { value: 3, label: 'Wednesday', abbr: 'WED' },
+                      { value: 4, label: 'Thursday', abbr: 'THU' },
+                      { value: 5, label: 'Friday', abbr: 'FRI' },
+                      { value: 6, label: 'Saturday', abbr: 'SAT' },
+                      { value: 0, label: 'Sunday', abbr: 'SUN' },
+                    ].map((day) => (
                       <button
-                        key={day}
+                        key={day.value}
                         type="button"
-                        onClick={() => setFormData({ ...formData, payDayWeekly: i + 1 })}
-                        className={`py-4 text-xs font-semibold rounded-xl transition-all ${formData.payDayWeekly === i + 1
-                            ? "bg-blue-600 text-white shadow-lg shadow-blue-500/30 scale-105"
-                            : "bg-white dark:bg-neutral-900 hover:bg-slate-100 dark:hover:bg-neutral-800 text-slate-600 dark:text-neutral-400 border border-slate-200 dark:border-neutral-800"
+                        onClick={() => setFormData({ ...formData, payDayWeekly: day.value })}
+                        className={`p-3 md:p-4 rounded-xl border-2 transition-all ${formData.payDayWeekly === day.value
+                          ? 'border-blue-600 bg-blue-50 dark:bg-blue-900/20'
+                          : 'border-slate-200 dark:border-neutral-700 hover:border-blue-300 dark:hover:border-blue-700'
                           }`}
                       >
-                        {day}
+                        <div className="text-[10px] md:text-xs font-bold text-slate-500 dark:text-neutral-500 mb-0.5 md:mb-1">
+                          {day.abbr}
+                        </div>
+                        <div className="text-[10px] md:text-sm font-semibold text-slate-900 dark:text-white truncate">
+                          {day.label}
+                        </div>
                       </button>
                     ))}
                   </div>
                 </div>
 
                 {/* Last Pay Date Input */}
-                <div className="space-y-2 p-4 bg-amber-50/50 dark:bg-amber-950/20 rounded-xl border border-amber-200 dark:border-amber-900/30">
+                <div className="space-y-2 p-3 sm:p-4 bg-amber-50/50 dark:bg-amber-950/20 rounded-xl border border-amber-200 dark:border-amber-900/30">
                   <div className="flex items-start gap-2">
                     <Info className="w-4 h-4 mt-0.5 text-amber-600 dark:text-amber-400 flex-shrink-0" />
                     <div className="flex-1 space-y-2">
                       <Label htmlFor="payStartDate" className="text-xs font-semibold text-amber-900 dark:text-amber-100">
                         Last Pay Date (Reference Point)
                       </Label>
-                      <p className="text-xs text-amber-700 dark:text-amber-300">
+                      <p className="text-[10px] sm:text-xs text-amber-700 dark:text-amber-300 leading-relaxed">
                         Enter any recent pay day. We'll use this to calculate your fortnightly cycle.
                       </p>
                       <Input
                         id="payStartDate"
                         type="date"
-                        className="bg-white dark:bg-neutral-900 border-amber-200 dark:border-amber-800"
+                        className="bg-white dark:bg-neutral-900 border-amber-200 dark:border-amber-800 text-sm h-10"
                         value={formData.payStartDate || ''}
                         onChange={(e) => setFormData({ ...formData, payStartDate: e.target.value })}
                         placeholder="Select your last pay date"
                       />
-                      {formData.payStartDate && formData.payDayWeekly && (
-                        <p className="text-xs text-green-600 dark:text-green-400 font-medium mt-2">
-                          ✓ Next pay days will be every other {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][formData.payDayWeekly]} starting from this date
+                      {formData.payStartDate && formData.payDayWeekly !== undefined && (
+                        <p className="text-[10px] sm:text-xs text-green-600 dark:text-green-400 font-medium mt-2 leading-relaxed">
+                          ✓ Next pay days will be every other {['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][formData.payDayWeekly]} starting from this date
                         </p>
                       )}
                     </div>
@@ -275,15 +301,15 @@ export default function PaySettings({ userId, initialData, onUpdate }: PaySettin
 
             {/* MONTHLY */}
             {formData.payFrequency === 'monthly' && (
-              <div className="grid grid-cols-7 gap-1.5">
+              <div className="grid grid-cols-7 gap-1 sm:gap-1.5">
                 {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => (
                   <button
                     key={day}
                     type="button"
                     onClick={() => setFormData({ ...formData, payDayMonthly: day })}
-                    className={`aspect-square flex items-center justify-center text-sm font-bold rounded-lg transition-all ${formData.payDayMonthly === day
-                        ? "bg-blue-600 text-white shadow-lg shadow-blue-500/30 scale-110 z-10"
-                        : "bg-white dark:bg-neutral-900 hover:bg-slate-100 dark:hover:bg-neutral-800 text-slate-600 dark:text-neutral-400 border border-slate-200 dark:border-neutral-800"
+                    className={`aspect-square flex items-center justify-center text-xs sm:text-sm font-bold rounded-md sm:rounded-lg transition-all ${formData.payDayMonthly === day
+                      ? "bg-blue-600 text-white shadow-lg shadow-blue-500/30 scale-110 z-10"
+                      : "bg-white dark:bg-neutral-900 hover:bg-slate-100 dark:hover:bg-neutral-800 text-slate-600 dark:text-neutral-400 border border-slate-200 dark:border-neutral-800"
                       }`}
                   >
                     {day}
