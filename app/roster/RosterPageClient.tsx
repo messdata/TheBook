@@ -35,6 +35,40 @@ interface DayData {
     shiftEnd: string;
 }
 
+function isPayDay(
+    date: Date,
+    payFrequency: string,
+    payDayWeekly: number,
+    payDayMonthly: number,
+    payStartDate: string
+): boolean {
+    if (payFrequency === 'weekly') {
+        // Sunday = 0, Monday = 1, etc. but our system uses 0=Sun, 1=Mon
+        return date.getDay() === (payDayWeekly === 0 ? 0 : payDayWeekly);
+    }
+
+    if (payFrequency === 'fortnightly' && payStartDate) {
+        const startDate = new Date(payStartDate);
+        startDate.setHours(0, 0, 0, 0);
+        const currentDateNormalized = new Date(date);
+        currentDateNormalized.setHours(0, 0, 0, 0);
+
+        // Calculate weeks since start date
+        const weeksSinceStart = Math.floor(
+            (currentDateNormalized.getTime() - startDate.getTime()) / (7 * 24 * 60 * 60 * 1000)
+        );
+
+        // Check if it's a pay week (even weeks) AND the correct day
+        return weeksSinceStart % 2 === 0 && date.getDay() === (payDayWeekly === 0 ? 0 : payDayWeekly);
+    }
+
+    if (payFrequency === 'monthly') {
+        return date.getDate() === payDayMonthly;
+    }
+
+    return false;
+}
+
 // Minimalist Time Picker Wheel Component
 function TimePickerWheel({
     value,
@@ -200,6 +234,12 @@ export default function RosterPageClient() {
     // Animation direction for calendar transitions
     const [direction, setDirection] = useState(0);
 
+    // Pay day settings
+    const [payFrequency, setPayFrequency] = useState<string>('monthly');
+    const [payDayWeekly, setPayDayWeekly] = useState<number>(5);
+    const [payDayMonthly, setPayDayMonthly] = useState<number>(1);
+    const [payStartDate, setPayStartDate] = useState<string>('');
+
     // Load roster data on mount
     useEffect(() => {
         const initializeUser = async () => {
@@ -221,6 +261,30 @@ export default function RosterPageClient() {
         };
         initializeUser();
     }, [router, syncRoster]);
+
+    // Fetch pay settings
+    useEffect(() => {
+        const fetchPaySettings = async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) return;
+
+            const { data: profile } = await supabase
+                .from('user_profiles')
+                .select('pay_frequency, pay_day_weekly, pay_day_monthly, pay_start_date')
+                .eq('user_id', user.id)
+                .single();
+
+            if (profile) {
+                setPayFrequency(profile.pay_frequency || 'monthly');
+                setPayDayWeekly(profile.pay_day_weekly || 5);
+                setPayDayMonthly(profile.pay_day_monthly || 1);
+                setPayStartDate(profile.pay_start_date || '');
+            }
+        };
+
+        fetchPaySettings();
+    }, []);
+
     // Update your handleSave function to use userId
     const handleSave = async () => {
         if (!userId) return;
@@ -256,6 +320,30 @@ export default function RosterPageClient() {
     // Get day data
     const getDayData = (date: Date): DayData | null => {
         return roster.get(getDateKey(date)) || null;
+    };
+
+    // Calculate accumulated pay up to a given date
+    const getAccumulatedPay = (upToDate: Date, hourlyRate: number = 15): number => {
+        let totalHours = 0;
+
+        // Get all dates from roster up to the given date
+        roster.forEach((dayData, key) => {
+            const [year, month, day] = key.split('-').map(Number);
+            const rosterDate = new Date(year, month, day);
+
+            if (rosterDate <= upToDate && dayData.type === 'working') {
+                const [startHour, startMin] = dayData.shiftStart.split(':').map(Number);
+                const [endHour, endMin] = dayData.shiftEnd.split(':').map(Number);
+
+                const startMinutes = startHour * 60 + startMin;
+                const endMinutes = endHour * 60 + endMin;
+                const hoursWorked = (endMinutes - startMinutes) / 60;
+
+                totalHours += hoursWorked;
+            }
+        });
+
+        return totalHours * hourlyRate;
     };
 
     // Toggle day type - WITH SUPABASE SAVE
@@ -394,8 +482,8 @@ export default function RosterPageClient() {
         const firstDay = new Date(year, month, 1).getDay();
         const daysInMonth = new Date(year, month + 1, 0).getDate();
         const today = new Date();
-
         const days = [];
+
 
         for (let i = 0; i < firstDay; i++) {
             days.push(
@@ -421,16 +509,24 @@ export default function RosterPageClient() {
 
             const dayData = getDayData(date);
             const dayType = dayData?.type;
+            const isPayDayDate = isPayDay(date, payFrequency, payDayWeekly, payDayMonthly, payStartDate);
+            const accumulatedPay = isPayDayDate ? getAccumulatedPay(date) : 0;
 
             days.push(
                 <motion.div
                     key={day}
                     variants={dayVariants}
                     whileTap={{ scale: 0.95 }}
-                    onClick={() => toggleDayType(date)}
+                    style={isPayDayDate ? {
+                        boxShadow: '0 0 15px rgba(34, 197, 94, 0.3), inset 0 0 15px rgba(34, 197, 94, 0.08)'
+                    } : {}}
                     className={`
-                        aspect-square p-1 md:p-2 border border-slate-200 dark:border-neutral-800 
-                        cursor-pointer transition-colors duration-300 rounded-md md:rounded-lg
+                        aspect-square p-1 md:p-2 border rounded-md md:rounded-lg relative
+                        cursor-pointer transition-all duration-300
+                        ${isPayDayDate
+                            ? "border-green-400/50 dark:border-green-500/50"
+                            : "border-slate-200 dark:border-neutral-800"
+                        }
                         ${isToday ? "ring-1 md:ring-2 ring-slate-400 dark:ring-neutral-600" : ""}
                         ${isSelected ? "ring-1 md:ring-2 ring-slate-600 dark:ring-neutral-400" : ""}
                         ${dayType === "working" ? "bg-blue-100 dark:bg-blue-950/30 hover:bg-blue-200 dark:hover:bg-blue-950/50" : ""}
@@ -438,33 +534,87 @@ export default function RosterPageClient() {
                         ${!dayType ? "bg-white dark:bg-neutral-900 hover:bg-slate-50 dark:hover:bg-neutral-800" : ""}
                     `}
                 >
-                    <motion.div
-                        className="flex flex-col h-full justify-between items-center"
-                        animate={dayType ? { scale: [1, 1.05, 1] } : {}}
-                        transition={{ duration: 0.3 }}
-                    >
-                        <span className={`text-xs md:text-sm font-semibold self-start ${isToday ? "text-blue-600 dark:text-blue-400" : "text-slate-800 dark:text-neutral-200"}`}>
-                            {day}
-                        </span>
-                        <AnimatePresence mode="wait">
-                            {dayData && dayType === "working" && (
-                                <motion.div
-                                    initial={{ opacity: 0, scale: 0 }}
-                                    animate={{ opacity: 1, scale: 1 }}
-                                    exit={{ opacity: 0, scale: 0 }}
-                                    className="w-2 h-2 md:w-2.5 md:h-2.5 rounded-full bg-blue-600 dark:bg-blue-400 mb-0.5"
-                                />
-                            )}
-                            {dayData && dayType === "off" && (
-                                <motion.div
-                                    initial={{ opacity: 0, scale: 0 }}
-                                    animate={{ opacity: 1, scale: 1 }}
-                                    exit={{ opacity: 0, scale: 0 }}
-                                    className="w-2 h-2 md:w-2.5 md:h-2.5 rounded-full bg-red-600 dark:bg-red-400 mb-0.5"
-                                />
-                            )}
-                        </AnimatePresence>
-                    </motion.div>
+                    {/* Pulsing indicator for pay day */}
+                    {isPayDayDate && (
+                        <div className="absolute top-0 right-0 w-6 h-6 flex items-center justify-center pointer-events-none z-20">
+                            <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                        </div>
+                    )}
+
+                    {/* Tooltip wrapper for entire cell */}
+                    {isPayDayDate ? (
+                        <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <div
+                                        onClick={() => toggleDayType(date)}
+                                        className="absolute inset-0 z-10"
+                                    >
+                                        <motion.div
+                                            className="flex flex-col h-full justify-between items-center p-1 md:p-2"
+                                            animate={dayType ? { scale: [1, 1.05, 1] } : {}}
+                                            transition={{ duration: 0.3 }}
+                                        >
+                                            <span className={`text-xs md:text-sm font-semibold self-start ${isToday ? "text-blue-600 dark:text-blue-400" : "text-slate-800 dark:text-neutral-200"}`}>
+                                                {day}
+                                            </span>
+                                            <AnimatePresence mode="wait">
+                                                {dayData && dayType === "working" && (
+                                                    <motion.div
+                                                        initial={{ opacity: 0, scale: 0 }}
+                                                        animate={{ opacity: 1, scale: 1 }}
+                                                        exit={{ opacity: 0, scale: 0 }}
+                                                        className="w-2 h-2 md:w-2.5 md:h-2.5 rounded-full bg-blue-600 dark:bg-blue-400 mb-0.5"
+                                                    />
+                                                )}
+                                                {dayData && dayType === "off" && (
+                                                    <motion.div
+                                                        initial={{ opacity: 0, scale: 0 }}
+                                                        animate={{ opacity: 1, scale: 1 }}
+                                                        exit={{ opacity: 0, scale: 0 }}
+                                                        className="w-2 h-2 md:w-2.5 md:h-2.5 rounded-full bg-red-600 dark:bg-red-400 mb-0.5"
+                                                    />
+                                                )}
+                                            </AnimatePresence>
+                                        </motion.div>
+                                    </div>
+                                </TooltipTrigger>
+                                <TooltipContent className="bg-green-600 dark:bg-green-500 text-white border-green-500">
+                                    <p className="text-xs font-semibold">Pay Day!</p>
+                                    <p className="text-[10px] opacity-90">Accumulated: €{accumulatedPay.toFixed(2)}</p>
+                                </TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
+                    ) : (
+                        <motion.div
+                            onClick={() => toggleDayType(date)}
+                            className="flex flex-col h-full justify-between items-center"
+                            animate={dayType ? { scale: [1, 1.05, 1] } : {}}
+                            transition={{ duration: 0.3 }}
+                        >
+                            <span className={`text-xs md:text-sm font-semibold self-start ${isToday ? "text-blue-600 dark:text-blue-400" : "text-slate-800 dark:text-neutral-200"}`}>
+                                {day}
+                            </span>
+                            <AnimatePresence mode="wait">
+                                {dayData && dayType === "working" && (
+                                    <motion.div
+                                        initial={{ opacity: 0, scale: 0 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        exit={{ opacity: 0, scale: 0 }}
+                                        className="w-2 h-2 md:w-2.5 md:h-2.5 rounded-full bg-blue-600 dark:bg-blue-400 mb-0.5"
+                                    />
+                                )}
+                                {dayData && dayType === "off" && (
+                                    <motion.div
+                                        initial={{ opacity: 0, scale: 0 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        exit={{ opacity: 0, scale: 0 }}
+                                        className="w-2 h-2 md:w-2.5 md:h-2.5 rounded-full bg-red-600 dark:bg-red-400 mb-0.5"
+                                    />
+                                )}
+                            </AnimatePresence>
+                        </motion.div>
+                    )}
                 </motion.div>
             );
         }
@@ -514,6 +664,8 @@ export default function RosterPageClient() {
 
             const dayData = getDayData(date);
             const dayType = dayData?.type;
+            const isPayDayDate = isPayDay(date, payFrequency, payDayWeekly, payDayMonthly, payStartDate);
+            const accumulatedPay = isPayDayDate ? getAccumulatedPay(date) : 0;
 
             days.push(
                 <motion.div
@@ -523,10 +675,16 @@ export default function RosterPageClient() {
                     whileTap={{ scale: 0.98 }}
                 >
                     <motion.div
-                        onClick={() => toggleDayType(date)}
+                        style={isPayDayDate ? {
+                            boxShadow: '0 0 20px rgba(34, 197, 94, 0.4), inset 0 0 20px rgba(34, 197, 94, 0.1)'
+                        } : {}}
                         className={`
-                            p-2 md:p-4 border border-slate-200 dark:border-neutral-800 rounded-lg
-                            cursor-pointer transition-colors duration-300 min-h-[160px] md:min-h-[200px]
+                            p-2 md:p-4 border rounded-lg relative
+                            cursor-pointer transition-all duration-300 min-h-[160px] md:min-h-[200px]
+                            ${isPayDayDate
+                                ? "border-green-400/50 dark:border-green-500/50"
+                                : "border-slate-200 dark:border-neutral-800"
+                            }
                             ${isToday ? "ring-1 md:ring-2 ring-slate-400 dark:ring-neutral-600" : ""}
                             ${isSelected ? "ring-1 md:ring-2 ring-slate-600 dark:ring-neutral-400" : ""}
                             ${dayType === "working" ? "bg-blue-100 dark:bg-blue-950/30 hover:bg-blue-200 dark:hover:bg-blue-950/50" : ""}
@@ -534,43 +692,108 @@ export default function RosterPageClient() {
                             ${!dayType ? "bg-white dark:bg-neutral-900 hover:bg-slate-50 dark:hover:bg-neutral-800" : ""}
                         `}
                     >
-                        <div className="text-center mb-2">
-                            <div className="text-[10px] md:text-xs font-semibold text-slate-600 dark:text-neutral-400">
-                                {date.toLocaleDateString('en-US', { weekday: 'short' })}
+                        {/* Pulsing indicator for pay day */}
+                        {isPayDayDate && (
+                            <div className="absolute top-1 right-1 w-8 h-8 flex items-center justify-center pointer-events-none z-20">
+                                <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
                             </div>
-                            <div className={`text-xl md:text-2xl font-bold ${isToday ? "text-blue-600 dark:text-blue-400" : "text-slate-800 dark:text-neutral-200"}`}>
-                                {date.getDate()}
+                        )}
+
+                        {/* Tooltip wrapper for entire card */}
+                        {isPayDayDate ? (
+                            <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <div
+                                            onClick={() => toggleDayType(date)}
+                                            className="absolute inset-0 z-10 flex flex-col"
+                                        >
+                                            <div className="text-center mb-2 pt-2 md:pt-4">
+                                                <div className="text-[10px] md:text-xs font-semibold text-slate-600 dark:text-neutral-400">
+                                                    {date.toLocaleDateString('en-US', { weekday: 'short' })}
+                                                </div>
+                                                <div className={`text-xl md:text-2xl font-bold ${isToday ? "text-blue-600 dark:text-blue-400" : "text-slate-800 dark:text-neutral-200"}`}>
+                                                    {date.getDate()}
+                                                </div>
+                                            </div>
+                                            <AnimatePresence mode="wait">
+                                                {dayData && dayType === "working" && (
+                                                    <motion.div
+                                                        initial={{ opacity: 0, y: 10 }}
+                                                        animate={{ opacity: 1, y: 0 }}
+                                                        exit={{ opacity: 0, y: -10 }}
+                                                        className="mt-2 md:mt-4 text-center"
+                                                    >
+                                                        <div className="text-xs md:text-sm font-semibold text-blue-700 dark:text-blue-300">
+                                                            Working Day
+                                                        </div>
+                                                        <div className="text-[10px] md:text-xs text-blue-600 dark:text-blue-400 mt-1">
+                                                            {dayData.shiftStart} - {dayData.shiftEnd}
+                                                        </div>
+                                                    </motion.div>
+                                                )}
+                                                {dayData && dayType === "off" && (
+                                                    <motion.div
+                                                        initial={{ opacity: 0, y: 10 }}
+                                                        animate={{ opacity: 1, y: 0 }}
+                                                        exit={{ opacity: 0, y: -10 }}
+                                                        className="mt-2 md:mt-4 text-center"
+                                                    >
+                                                        <div className="text-xs md:text-sm font-semibold text-red-700 dark:text-red-300">
+                                                            Day Off
+                                                        </div>
+                                                    </motion.div>
+                                                )}
+                                            </AnimatePresence>
+                                        </div>
+                                    </TooltipTrigger>
+                                    <TooltipContent className="bg-green-600 dark:bg-green-500 text-white border-green-500">
+                                        <p className="text-xs font-semibold">Pay Day!</p>
+                                        <p className="text-[10px] opacity-90">Accumulated: €{accumulatedPay.toFixed(2)}</p>
+                                    </TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
+                        ) : (
+                            <div onClick={() => toggleDayType(date)}>
+                                <div className="text-center mb-2">
+                                    <div className="text-[10px] md:text-xs font-semibold text-slate-600 dark:text-neutral-400">
+                                        {date.toLocaleDateString('en-US', { weekday: 'short' })}
+                                    </div>
+                                    <div className={`text-xl md:text-2xl font-bold ${isToday ? "text-blue-600 dark:text-blue-400" : "text-slate-800 dark:text-neutral-200"}`}>
+                                        {date.getDate()}
+                                    </div>
+                                </div>
+                                <AnimatePresence mode="wait">
+                                    {dayData && dayType === "working" && (
+                                        <motion.div
+                                            initial={{ opacity: 0, y: 10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            exit={{ opacity: 0, y: -10 }}
+                                            className="mt-2 md:mt-4 text-center"
+                                        >
+                                            <div className="text-xs md:text-sm font-semibold text-blue-700 dark:text-blue-300">
+                                                Working Day
+                                            </div>
+                                            <div className="text-[10px] md:text-xs text-blue-600 dark:text-blue-400 mt-1">
+                                                {dayData.shiftStart} - {dayData.shiftEnd}
+                                            </div>
+                                        </motion.div>
+                                    )}
+                                    {dayData && dayType === "off" && (
+                                        <motion.div
+                                            initial={{ opacity: 0, y: 10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            exit={{ opacity: 0, y: -10 }}
+                                            className="mt-2 md:mt-4 text-center"
+                                        >
+                                            <div className="text-xs md:text-sm font-semibold text-red-700 dark:text-red-300">
+                                                Day Off
+                                            </div>
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
                             </div>
-                        </div>
-                        <AnimatePresence mode="wait">
-                            {dayData && dayType === "working" && (
-                                <motion.div
-                                    initial={{ opacity: 0, y: 10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0, y: -10 }}
-                                    className="mt-2 md:mt-4 text-center"
-                                >
-                                    <div className="text-xs md:text-sm font-semibold text-blue-700 dark:text-blue-300">
-                                        Working Day
-                                    </div>
-                                    <div className="text-[10px] md:text-xs text-blue-600 dark:text-blue-400 mt-1">
-                                        {dayData.shiftStart} - {dayData.shiftEnd}
-                                    </div>
-                                </motion.div>
-                            )}
-                            {dayData && dayType === "off" && (
-                                <motion.div
-                                    initial={{ opacity: 0, y: 10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0, y: -10 }}
-                                    className="mt-2 md:mt-4 text-center"
-                                >
-                                    <div className="text-xs md:text-sm font-semibold text-red-700 dark:text-red-300">
-                                        Day Off
-                                    </div>
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
+                        )}
                     </motion.div>
                 </motion.div>
             );
@@ -901,6 +1124,15 @@ export default function RosterPageClient() {
                                             <div className="flex items-center gap-2">
                                                 <div className="w-2.5 h-2.5 rounded-md border-2 border-zinc-400 bg-white/50" />
                                                 <span className="text-xs font-medium text-zinc-600">Today</span>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <div
+                                                    className="w-2.5 h-2.5 rounded-full bg-green-500/30 border border-green-500/50"
+                                                    style={{
+                                                        boxShadow: '0 0 8px rgba(34, 197, 94, 0.4)'
+                                                    }}
+                                                />
+                                                <span className="text-xs font-medium text-zinc-600">Pay Day</span>
                                             </div>
                                         </div>
                                     </motion.div>
