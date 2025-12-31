@@ -75,13 +75,13 @@ export default function WalletClient() {
   const fetchPaySettings = async (uid: string) => {
     const { data: profile } = await supabase
       .from('user_profiles')
-      .select('currency, week_start_day, hourly_rate, break_duration, overtime_enabled, overtime_threshold, overtime_rate, sunday_rate')
+      .select('currency, week_start_day, hourly_rate, break_duration, overtime_enabled, overtime_threshold, overtime_rate, sunday_rate, pay_frequency, pay_day_weekly, pay_day_monthly, pay_start_date')
       .eq('user_id', uid)
       .single();
 
     if (profile) {
       console.log('📊 Loaded pay settings from database:', profile);
-      
+
       // Batch all state updates together using React 18's automatic batching
       // Or wrap in startTransition for non-urgent updates
       setCurrency(profile.currency || 'EUR');
@@ -92,8 +92,17 @@ export default function WalletClient() {
       setOvertimeThreshold(profile.overtime_threshold || 40);
       setOvertimeRate(profile.overtime_rate || 1.5);
       setSundayRate(profile.sunday_rate || 2);
-      
-      console.log('✅ Overtime enabled:', profile.overtime_enabled, '| Threshold:', profile.overtime_threshold);
+      setPayFrequency(profile.pay_frequency || 'monthly');
+      setPayDayWeekly(profile.pay_day_weekly || 5);
+      setPayDayMonthly(profile.pay_day_monthly || 1);
+      setPayStartDate(profile.pay_start_date || '');
+
+      console.log('✅ Pay cycle settings:', {
+        frequency: profile.pay_frequency,
+        dayWeekly: profile.pay_day_weekly,
+        dayMonthly: profile.pay_day_monthly,
+        startDate: profile.pay_start_date
+      });
     }
   };
 
@@ -155,7 +164,7 @@ export default function WalletClient() {
     const totalHours = regularHours + sundayHours;
     if (overtimeEnabled && totalHours > overtimeThreshold) {
       const excessHours = totalHours - overtimeThreshold;
-      
+
       // Take overtime from regular hours first, then Sunday if needed
       if (regularHours >= excessHours) {
         // All OT comes from regular hours
@@ -204,10 +213,10 @@ export default function WalletClient() {
     // Calculate overtime: Check TOTAL hours against monthly threshold (4 weeks)
     const totalHours = regularHours + sundayHours;
     const monthlyThreshold = overtimeThreshold * 4;
-    
+
     if (overtimeEnabled && totalHours > monthlyThreshold) {
       const excessHours = totalHours - monthlyThreshold;
-      
+
       // Take overtime from regular hours first, then Sunday if needed
       if (regularHours >= excessHours) {
         overtimeHours = excessHours;
@@ -234,6 +243,10 @@ export default function WalletClient() {
 
   const currentWeek = useMemo(() => calculateWeeklyPay(currentWeekOffset), [currentWeekOffset, roster, hourlyRate, breakMinutes, overtimeEnabled, overtimeThreshold, weekStartDay]);
   const currentMonth = useMemo(() => calculateMonthlyPay(), [roster, hourlyRate, breakMinutes, overtimeEnabled, overtimeThreshold]);
+  const [payFrequency, setPayFrequency] = useState('monthly');
+  const [payDayWeekly, setPayDayWeekly] = useState(5);
+  const [payDayMonthly, setPayDayMonthly] = useState(1);
+  const [payStartDate, setPayStartDate] = useState('');
 
   // Prepare pay data for PaySettings component
   const payData = {
@@ -243,6 +256,10 @@ export default function WalletClient() {
     overtimeThreshold,
     overtimeRate,
     sundayRate,
+    payFrequency,
+    payDayWeekly,
+    payDayMonthly,
+    payStartDate,
   };
 
   if (loading) return <div className="min-h-screen bg-white dark:bg-black flex items-center justify-center font-mono text-[10px] tracking-[0.4em] text-black dark:text-zinc-500">INIT_FINANCIAL_DATA...</div>;
@@ -299,132 +316,132 @@ export default function WalletClient() {
               </TooltipProvider>
             </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
 
-          <div className="lg:col-span-2 space-y-8">
-            {/* Nav Bar - Sharp Elevation */}
-            <motion.div variants={itemVariants} initial="hidden" animate="visible" className="flex items-center justify-between bg-white dark:bg-zinc-900/40 p-1.5 rounded-none border-2 border-black dark:border-white/10 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.05)]">
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button variant="ghost" size="icon" onClick={() => setCurrentWeekOffset(v => v - 1)} className="hover:bg-black/5 dark:hover:bg-white/5">
-                      <ChevronLeft className="w-4 h-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent side="right" className="bg-slate-900 dark:bg-white text-white dark:text-slate-900 border-none">
-                    <p className="text-xs font-semibold">Previous Week</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-              <div className="text-center py-2 px-6 border-x-2 border-black dark:border-white/10">
-                <span className="block text-[8px] uppercase tracking-[0.2em] font-black text-zinc-400 mb-0.5">Timeframe_Range</span>
-                <span className="text-[11px] font-bold font-mono uppercase tracking-tighter">
-                  {currentWeek.weekStart.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })} — {currentWeek.weekEnd.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
-                </span>
-              </div>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button variant="ghost" size="icon" onClick={() => setCurrentWeekOffset(v => v + 1)} className="hover:bg-black/5 dark:hover:bg-white/5">
-                      <ChevronRight className="w-4 h-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent side="left" className="bg-slate-900 dark:bg-white text-white dark:text-slate-900 border-none">
-                    <p className="text-xs font-semibold">Next Week</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </motion.div>
-
-            {/* Bento Grid Stats - High Contrast Borders */}
-            <motion.div variants={containerVariants} initial="hidden" animate="visible" className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {[
-                { label: "Net Pay", val: `${getCurrencySymbol(currency)}${currentWeek.totalPay.toFixed(2)}`, icon: DollarSign },
-                { label: "Hours", val: `${(currentWeek.regularHours + currentWeek.overtimeHours + currentWeek.sundayHours).toFixed(1)}h`, icon: Clock },
-                { label: "Shifts", val: currentWeek.shifts.length, icon: Calendar },
-                { label: "Daily Avg", val: `${getCurrencySymbol(currency)}${currentWeek.shifts.length ? (currentWeek.totalPay / currentWeek.shifts.length).toFixed(2) : '0'}`, icon: TrendingUp }
-              ].map((stat, i) => (
-                <motion.div
-                  key={i}
-                  variants={itemVariants}
-                  className="bg-white dark:bg-neutral-900 p-6 border border-slate-200 dark:border-neutral-800 rounded-xl shadow-sm hover:shadow-md dark:hover:shadow-lg transition-all group"
-                >
-                  <div className="flex items-center justify-between mb-4">
-                    <stat.icon className="w-4 h-4 text-slate-400 dark:text-neutral-500 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors" />
-                    <span className="text-xs font-mono text-slate-300 dark:text-neutral-700">0{i + 1}</span>
+              <div className="lg:col-span-2 space-y-8">
+                {/* Nav Bar - Sharp Elevation */}
+                <motion.div variants={itemVariants} initial="hidden" animate="visible" className="flex items-center justify-between bg-white dark:bg-zinc-900/40 p-1.5 rounded-none border-2 border-black dark:border-white/10 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.05)]">
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button variant="ghost" size="icon" onClick={() => setCurrentWeekOffset(v => v - 1)} className="hover:bg-black/5 dark:hover:bg-white/5">
+                          <ChevronLeft className="w-4 h-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent side="right" className="bg-slate-900 dark:bg-white text-white dark:text-slate-900 border-none">
+                        <p className="text-xs font-semibold">Previous Week</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                  <div className="text-center py-2 px-6 border-x-2 border-black dark:border-white/10">
+                    <span className="block text-[8px] uppercase tracking-[0.2em] font-black text-zinc-400 mb-0.5">Timeframe_Range</span>
+                    <span className="text-[11px] font-bold font-mono uppercase tracking-tighter">
+                      {currentWeek.weekStart.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })} — {currentWeek.weekEnd.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+                    </span>
                   </div>
-                  <span className="block text-xs uppercase tracking-wide font-bold text-slate-500 dark:text-neutral-500 mb-1">{stat.label}</span>
-                  <span className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">{stat.val}</span>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button variant="ghost" size="icon" onClick={() => setCurrentWeekOffset(v => v + 1)} className="hover:bg-black/5 dark:hover:bg-white/5">
+                          <ChevronRight className="w-4 h-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent side="left" className="bg-slate-900 dark:bg-white text-white dark:text-slate-900 border-none">
+                        <p className="text-xs font-semibold">Next Week</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 </motion.div>
-              ))}
-            </motion.div>
 
-            {/* Activity Log - Flat & Clean */}
-            <motion.div variants={itemVariants} initial="hidden" animate="visible">
-              <Card className="rounded-xl border border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 overflow-hidden shadow-lg">
-                <CardHeader className="border-b border-slate-200 dark:border-neutral-800 py-4 px-6 bg-slate-50 dark:bg-neutral-950">
-                  <CardTitle className="text-xs uppercase tracking-wide text-slate-700 dark:text-neutral-400 font-bold flex justify-between items-center">
-                    <div className="flex items-center gap-2">
-                      <span>Shift Activity Log</span>
-                      <TooltipProvider>
-                        <Tooltip delayDuration={300}>
-                          <TooltipTrigger asChild>
-                            <Info className="w-4 h-4 text-slate-400 hover:text-slate-600 dark:hover:text-neutral-300 cursor-help transition-colors" />
-                          </TooltipTrigger>
-                          <TooltipContent
-                            side="bottom"
-                            align="start"
-                            sideOffset={5}
-                            className="bg-slate-900 dark:bg-white text-white dark:text-slate-900 border-none max-w-xs z-50"
-                          >
-                            <p className="text-xs font-semibold">Detailed list of all your shifts for the selected week with hours and earnings breakdown</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    </div>
-                    <span className="font-mono text-slate-500 dark:text-neutral-500">{currentWeek.shifts.length} ENTRIES</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-0">
-                  {currentWeek.shifts.length === 0 ? (
-                    <div className="p-20 text-center text-slate-400 dark:text-neutral-600 text-xs font-medium tracking-wide">NO SHIFTS RECORDED</div>
-                  ) : (
-                    <div className="divide-y divide-slate-100 dark:divide-neutral-800">
-                      {currentWeek.shifts.map((shift: any, idx: number) => (
-                        <div key={idx} className="flex items-center justify-between p-5 hover:bg-slate-50 dark:hover:bg-neutral-800 transition-all group cursor-default">
-                          <div className="flex items-center gap-6">
-                            <div className="w-10 h-10 border border-slate-300 dark:border-neutral-700 rounded-lg flex items-center justify-center text-xs font-bold font-mono group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-600 transition-all">
-                              {shift.day.substring(0, 2).toUpperCase()}
-                            </div>
-                            <div>
-                              <div className="text-sm font-semibold text-slate-900 dark:text-white">{shift.date.toLocaleDateString('en-GB', { day: '2-digit', month: 'long' })}</div>
-                              <div className="text-xs text-slate-500 dark:text-neutral-500 font-medium mt-0.5">{shift.hours.toFixed(2)} hours {shift.isSunday && <span className="text-purple-600 dark:text-purple-400 font-bold ml-1">Sunday</span>}</div>
-                            </div>
-                          </div>
-                          <div className="text-base font-bold text-slate-900 dark:text-white">
-                            {getCurrencySymbol(currency)}{(shift.hours * hourlyRate * (shift.isSunday ? sundayRate : 1)).toFixed(2)}
-                          </div>
+                {/* Bento Grid Stats - High Contrast Borders */}
+                <motion.div variants={containerVariants} initial="hidden" animate="visible" className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {[
+                    { label: "Net Pay", val: `${getCurrencySymbol(currency)}${currentWeek.totalPay.toFixed(2)}`, icon: DollarSign },
+                    { label: "Hours", val: `${(currentWeek.regularHours + currentWeek.overtimeHours + currentWeek.sundayHours).toFixed(1)}h`, icon: Clock },
+                    { label: "Shifts", val: currentWeek.shifts.length, icon: Calendar },
+                    { label: "Daily Avg", val: `${getCurrencySymbol(currency)}${currentWeek.shifts.length ? (currentWeek.totalPay / currentWeek.shifts.length).toFixed(2) : '0'}`, icon: TrendingUp }
+                  ].map((stat, i) => (
+                    <motion.div
+                      key={i}
+                      variants={itemVariants}
+                      className="bg-white dark:bg-neutral-900 p-6 border border-slate-200 dark:border-neutral-800 rounded-xl shadow-sm hover:shadow-md dark:hover:shadow-lg transition-all group"
+                    >
+                      <div className="flex items-center justify-between mb-4">
+                        <stat.icon className="w-4 h-4 text-slate-400 dark:text-neutral-500 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors" />
+                        <span className="text-xs font-mono text-slate-300 dark:text-neutral-700">0{i + 1}</span>
+                      </div>
+                      <span className="block text-xs uppercase tracking-wide font-bold text-slate-500 dark:text-neutral-500 mb-1">{stat.label}</span>
+                      <span className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">{stat.val}</span>
+                    </motion.div>
+                  ))}
+                </motion.div>
+
+                {/* Activity Log - Flat & Clean */}
+                <motion.div variants={itemVariants} initial="hidden" animate="visible">
+                  <Card className="rounded-xl border border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 overflow-hidden shadow-lg">
+                    <CardHeader className="border-b border-slate-200 dark:border-neutral-800 py-4 px-6 bg-slate-50 dark:bg-neutral-950">
+                      <CardTitle className="text-xs uppercase tracking-wide text-slate-700 dark:text-neutral-400 font-bold flex justify-between items-center">
+                        <div className="flex items-center gap-2">
+                          <span>Shift Activity Log</span>
+                          <TooltipProvider>
+                            <Tooltip delayDuration={300}>
+                              <TooltipTrigger asChild>
+                                <Info className="w-4 h-4 text-slate-400 hover:text-slate-600 dark:hover:text-neutral-300 cursor-help transition-colors" />
+                              </TooltipTrigger>
+                              <TooltipContent
+                                side="bottom"
+                                align="start"
+                                sideOffset={5}
+                                className="bg-slate-900 dark:bg-white text-white dark:text-slate-900 border-none max-w-xs z-50"
+                              >
+                                <p className="text-xs font-semibold">Detailed list of all your shifts for the selected week with hours and earnings breakdown</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
                         </div>
-                      ))}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </motion.div>
-          </div>
-
-          {/* Right Sidebar - Brutalist Detail */}
-          <div className="space-y-6">
-
-            {/* Total Breakdown - Elevation Shadow */}
-            <Card className="rounded-xl border border-slate-200 dark:border-neutral-800 bg-slate-900 dark:bg-neutral-950 text-white shadow-xl relative overflow-hidden group">
-              <div className="absolute top-0 right-0 p-4 opacity-10">
-                <DollarSign className="w-20 h-20 rotate-12" />
+                        <span className="font-mono text-slate-500 dark:text-neutral-500">{currentWeek.shifts.length} ENTRIES</span>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-0">
+                      {currentWeek.shifts.length === 0 ? (
+                        <div className="p-20 text-center text-slate-400 dark:text-neutral-600 text-xs font-medium tracking-wide">NO SHIFTS RECORDED</div>
+                      ) : (
+                        <div className="divide-y divide-slate-100 dark:divide-neutral-800">
+                          {currentWeek.shifts.map((shift: any, idx: number) => (
+                            <div key={idx} className="flex items-center justify-between p-5 hover:bg-slate-50 dark:hover:bg-neutral-800 transition-all group cursor-default">
+                              <div className="flex items-center gap-6">
+                                <div className="w-10 h-10 border border-slate-300 dark:border-neutral-700 rounded-lg flex items-center justify-center text-xs font-bold font-mono group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-600 transition-all">
+                                  {shift.day.substring(0, 2).toUpperCase()}
+                                </div>
+                                <div>
+                                  <div className="text-sm font-semibold text-slate-900 dark:text-white">{shift.date.toLocaleDateString('en-GB', { day: '2-digit', month: 'long' })}</div>
+                                  <div className="text-xs text-slate-500 dark:text-neutral-500 font-medium mt-0.5">{shift.hours.toFixed(2)} hours {shift.isSunday && <span className="text-purple-600 dark:text-purple-400 font-bold ml-1">Sunday</span>}</div>
+                                </div>
+                              </div>
+                              <div className="text-base font-bold text-slate-900 dark:text-white">
+                                {getCurrencySymbol(currency)}{(shift.hours * hourlyRate * (shift.isSunday ? sundayRate : 1)).toFixed(2)}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </motion.div>
               </div>
-              <CardHeader className="relative z-10 border-b border-white/10">
-                <div className="flex items-center gap-2">
-                  <CardTitle className="text-xs uppercase tracking-wide text-slate-400 font-bold">Weekly Breakdown</CardTitle>
-                  {/* <TooltipProvider>
+
+              {/* Right Sidebar - Brutalist Detail */}
+              <div className="space-y-6">
+
+                {/* Total Breakdown - Elevation Shadow */}
+                <Card className="rounded-xl border border-slate-200 dark:border-neutral-800 bg-slate-900 dark:bg-neutral-950 text-white shadow-xl relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 p-4 opacity-10">
+                    <DollarSign className="w-20 h-20 rotate-12" />
+                  </div>
+                  <CardHeader className="relative z-10 border-b border-white/10">
+                    <div className="flex items-center gap-2">
+                      <CardTitle className="text-xs uppercase tracking-wide text-slate-400 font-bold">Weekly Breakdown</CardTitle>
+                      {/* <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <Info className="w-4 h-4 text-slate-500 hover:text-slate-300 cursor-help transition-colors" />
@@ -434,89 +451,89 @@ export default function WalletClient() {
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider> */}
-                </div>
-              </CardHeader>
-              <CardContent className="p-8 space-y-5 relative z-10">
-                <div className="space-y-3">
-                  {/* Regular Pay */}
-                  <div className="flex justify-between items-center text-sm">
-                    <div>
-                      <span className="text-slate-400">Regular Pay</span>
-                      <p className="text-[10px] text-slate-500 mt-0.5">{currentWeek.regularHours.toFixed(1)}h × {getCurrencySymbol(currency)}{hourlyRate.toFixed(2)}</p>
                     </div>
-                    <span className="font-semibold">{getCurrencySymbol(currency)}{currentWeek.regularPay.toFixed(2)}</span>
-                  </div>
+                  </CardHeader>
+                  <CardContent className="p-8 space-y-5 relative z-10">
+                    <div className="space-y-3">
+                      {/* Regular Pay */}
+                      <div className="flex justify-between items-center text-sm">
+                        <div>
+                          <span className="text-slate-400">Regular Pay</span>
+                          <p className="text-[10px] text-slate-500 mt-0.5">{currentWeek.regularHours.toFixed(1)}h × {getCurrencySymbol(currency)}{hourlyRate.toFixed(2)}</p>
+                        </div>
+                        <span className="font-semibold">{getCurrencySymbol(currency)}{currentWeek.regularPay.toFixed(2)}</span>
+                      </div>
 
-                  {/* Overtime Pay with Details */}
-                  {currentWeek.overtimePay > 0 && (
-                    <div className="flex justify-between items-center text-sm border-b border-white/5 pb-2">
-                      <div>
-                        <span className="text-blue-400 font-semibold">Overtime</span>
-                        <p className="text-[10px] text-blue-300 mt-0.5">
-                          {currentWeek.overtimeHours.toFixed(1)}h × {getCurrencySymbol(currency)}{(hourlyRate * overtimeRate).toFixed(2)} ({overtimeRate}×)
-                        </p>
-                      </div>
-                      <span className="text-blue-400 font-semibold">+{getCurrencySymbol(currency)}{currentWeek.overtimePay.toFixed(2)}</span>
-                    </div>
-                  )}
+                      {/* Overtime Pay with Details */}
+                      {currentWeek.overtimePay > 0 && (
+                        <div className="flex justify-between items-center text-sm border-b border-white/5 pb-2">
+                          <div>
+                            <span className="text-blue-400 font-semibold">Overtime</span>
+                            <p className="text-[10px] text-blue-300 mt-0.5">
+                              {currentWeek.overtimeHours.toFixed(1)}h × {getCurrencySymbol(currency)}{(hourlyRate * overtimeRate).toFixed(2)} ({overtimeRate}×)
+                            </p>
+                          </div>
+                          <span className="text-blue-400 font-semibold">+{getCurrencySymbol(currency)}{currentWeek.overtimePay.toFixed(2)}</span>
+                        </div>
+                      )}
 
-                  {/* Sunday Pay with Details */}
-                  {currentWeek.sundayPay > 0 && (
-                    <div className="flex justify-between items-center text-sm border-b border-white/5 pb-2">
-                      <div>
-                        <span className="text-purple-400 font-semibold">Sunday</span>
-                        <p className="text-[10px] text-purple-300 mt-0.5">
-                          {currentWeek.sundayHours.toFixed(1)}h × {getCurrencySymbol(currency)}{(hourlyRate * sundayRate).toFixed(2)} ({sundayRate}×)
-                        </p>
-                      </div>
-                      <span className="text-purple-400 font-semibold">+{getCurrencySymbol(currency)}{currentWeek.sundayPay.toFixed(2)}</span>
+                      {/* Sunday Pay with Details */}
+                      {currentWeek.sundayPay > 0 && (
+                        <div className="flex justify-between items-center text-sm border-b border-white/5 pb-2">
+                          <div>
+                            <span className="text-purple-400 font-semibold">Sunday</span>
+                            <p className="text-[10px] text-purple-300 mt-0.5">
+                              {currentWeek.sundayHours.toFixed(1)}h × {getCurrencySymbol(currency)}{(hourlyRate * sundayRate).toFixed(2)} ({sundayRate}×)
+                            </p>
+                          </div>
+                          <span className="text-purple-400 font-semibold">+{getCurrencySymbol(currency)}{currentWeek.sundayPay.toFixed(2)}</span>
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
-                <div className="pt-6 flex flex-col gap-1">
-                  <span className="text-xs uppercase tracking-wide font-bold text-slate-500">Total Estimated</span>
-                  <span className="text-5xl font-bold text-white tracking-tight leading-none py-2 group-hover:scale-[1.02] transition-transform origin-left">{getCurrencySymbol(currency)}{currentWeek.totalPay.toFixed(2)}</span>
-                </div>
-              </CardContent>
-            </Card>
+                    <div className="pt-6 flex flex-col gap-1">
+                      <span className="text-xs uppercase tracking-wide font-bold text-slate-500">Total Estimated</span>
+                      <span className="text-5xl font-bold text-white tracking-tight leading-none py-2 group-hover:scale-[1.02] transition-transform origin-left">{getCurrencySymbol(currency)}{currentWeek.totalPay.toFixed(2)}</span>
+                    </div>
+                  </CardContent>
+                </Card>
 
-            {/* Help & Tips Card - Below Weekly Breakdown */}
-            <Card className="rounded-xl border border-blue-200 dark:border-blue-800/30 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20">
-              <CardContent className="p-5">
-                <div className="flex items-start gap-3">
-                  <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-blue-500 dark:bg-blue-600 flex items-center justify-center">
-                    <Info className="w-4 h-4 text-white" />
-                  </div>
-                  <div className="flex-1 space-y-2">
-                    <h4 className="text-sm font-bold text-slate-800 dark:text-neutral-100">
-                      Quick Note
-                    </h4>
-                    <div className="space-y-2 text-xs text-slate-700 dark:text-neutral-300">
-                      <div className="flex items-start gap-2">
-                        <span className="text-blue-500 font-bold">•</span>
-                        <p><span className="font-semibold">Regular Pay:</span> Standard hourly rate × hours worked</p>
+                {/* Help & Tips Card - Below Weekly Breakdown */}
+                <Card className="rounded-xl border border-blue-200 dark:border-blue-800/30 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20">
+                  <CardContent className="p-5">
+                    <div className="flex items-start gap-3">
+                      <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-blue-500 dark:bg-blue-600 flex items-center justify-center">
+                        <Info className="w-4 h-4 text-white" />
                       </div>
-                      <div className="flex items-start gap-2">
-                        <span className="text-blue-500 font-bold">•</span>
-                        <p><span className="font-semibold">Overtime:</span> Kicks in after threshold hours per week</p>
-                      </div>
-                      <div className="flex items-start gap-2">
-                        <span className="text-blue-500 font-bold">•</span>
-                        <p><span className="font-semibold">Sunday:</span> Premium rate applied to Sunday shifts</p>
+                      <div className="flex-1 space-y-2">
+                        <h4 className="text-sm font-bold text-slate-800 dark:text-neutral-100">
+                          Quick Note
+                        </h4>
+                        <div className="space-y-2 text-xs text-slate-700 dark:text-neutral-300">
+                          <div className="flex items-start gap-2">
+                            <span className="text-blue-500 font-bold">•</span>
+                            <p><span className="font-semibold">Regular Pay:</span> Standard hourly rate × hours worked</p>
+                          </div>
+                          <div className="flex items-start gap-2">
+                            <span className="text-blue-500 font-bold">•</span>
+                            <p><span className="font-semibold">Overtime:</span> Kicks in after threshold hours per week</p>
+                          </div>
+                          <div className="flex items-start gap-2">
+                            <span className="text-blue-500 font-bold">•</span>
+                            <p><span className="font-semibold">Sunday:</span> Premium rate applied to Sunday shifts</p>
+                          </div>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
           </TabsContent>
 
           {/* Settings Tab */}
           <TabsContent value="settings" className="mt-6">
-            <PaySettings 
-              userId={userId!} 
+            <PaySettings
+              userId={userId!}
               initialData={payData}
               onUpdate={() => fetchPaySettings(userId!)}
             />
