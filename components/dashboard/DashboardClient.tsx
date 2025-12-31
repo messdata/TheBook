@@ -679,6 +679,15 @@ export default function DashboardClient() {
                                             <p className="text-xl md:text-2xl font-black tracking-tighter text-amber-500 dark:text-amber-500 truncate text-center transition-transform group-hover/item:scale-105">
                                                 {nextShift ? nextShift.day : 'None'}
                                             </p>
+                                            {nextShift && nextShift.date && (
+                                                <p className="text-[10px] font-semibold text-slate-500 dark:text-neutral-400 mt-1 text-center">
+                                                    {new Date(nextShift.date).toLocaleDateString('en-GB', {
+                                                        day: '2-digit',
+                                                        month: 'short',
+                                                        year: 'numeric'
+                                                    })}
+                                                </p>
+                                            )}
                                         </div>
 
                                         {/* Next Off Section */}
@@ -689,8 +698,17 @@ export default function DashboardClient() {
                                             <p className="text-lg font-black tracking-tighter text-amber-600 dark:text-amber-500 truncate text-center">
                                                 {nextDayOff ? nextDayOff.day : 'None'}
                                             </p>
+                                            {nextDayOff && nextDayOff.date && (
+                                                <p className="text-[10px] font-semibold text-slate-500 dark:text-neutral-400 mt-0.5 text-center">
+                                                    {new Date(nextDayOff.date).toLocaleDateString('en-GB', {
+                                                        day: '2-digit',
+                                                        month: 'short',
+                                                        year: 'numeric'
+                                                    })}
+                                                </p>
+                                            )}
 
-                                            {nextDayOff && (
+                                            {nextDayOff && nextDayOff.daysFromNow > 0 && (
                                                 <div className="flex items-center justify-center gap-1.5 mt-1.5">
                                                     <div className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
                                                     <p className="text-[10px] font-bold text-slate-400 dark:text-neutral-500 uppercase tracking-tight">
