@@ -10,7 +10,7 @@ export default function ProfileLayout({
         <div className="flex h-screen">
             <Sidebar />
             <div className="flex-1 flex flex-col">
-                <TopBar userName="User" />
+                <TopBar />
                 <main className="flex-1 overflow-auto">
                     {children}
                 </main>
