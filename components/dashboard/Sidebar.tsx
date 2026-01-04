@@ -62,6 +62,36 @@ export default function Sidebar() {
     ? menuItems[hoveredIndex].color
     : "#ffffff";
 
+  const menuVariants = {
+    initial: { clipPath: "circle(0% at 5% 5%)" },
+    animate: {
+      clipPath: "circle(150% at 5% 5%)",
+      transition: {
+        duration: 0.8,
+        ease: "easeInOut" as any  // Use named easing
+      },
+    },
+    exit: {
+      clipPath: "circle(0% at 5% 5%)",
+      transition: {
+        duration: 0.6,
+        ease: "easeInOut" as any
+      },
+    },
+  };
+  const linkVariants = {
+    initial: { y: 120, opacity: 0 },
+    animate: (i: number) => ({
+      y: 0,
+      opacity: 1,
+      transition: {
+        delay: 0.3 + i * 0.1,
+        duration: 0.7,
+        ease: [0.215, 0.61, 0.355, 1] as const  // Add 'as const'
+      },
+    }),
+  }
+
   return (
     <>
       {/* Glassmorphic Toggle Button - LEFT SIDE */}
