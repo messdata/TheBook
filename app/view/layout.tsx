@@ -10,7 +10,7 @@ export default function ViewLayout({
         <div className="flex h-screen overflow-hidden">
             <Sidebar />
             <div className="flex-1 flex flex-col overflow-hidden">
-                <TopBar userName="User" />
+                <TopBar />
                 <main className="flex-1 overflow-y-auto overflow-x-hidden">
                     {children}
                 </main>
