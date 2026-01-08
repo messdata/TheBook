@@ -76,6 +76,7 @@ export default function DashboardClient() {
     const [hourlyRate, setHourlyRate] = useState(13.50); // Default hourly rate
     const [jobType, setJobType] = useState("Part-time"); // Default job type
     const [currency, setCurrency] = useState("EUR"); // Default currency
+    const [weekStartDay, setWeekStartDay] = useState(0); // 0 = Sunday, 1 = Monday, etc.
     const [loading, setLoading] = useState(true);
 
     // Metrics state
@@ -142,7 +143,9 @@ export default function DashboardClient() {
                 spending.forEach((item) => {
                     const date = new Date(item.date);
                     const startOfWeek = new Date(date);
-                    startOfWeek.setDate(date.getDate() - date.getDay());
+                    const currentDay = date.getDay();
+                    const daysToSubtract = (currentDay - weekStartDay + 7) % 7;
+                    startOfWeek.setDate(date.getDate() - daysToSubtract);
                     const weekKey = startOfWeek.toISOString().split('T')[0];
                     weekTotals[weekKey] = (weekTotals[weekKey] || 0) + item.amount;
                 });
@@ -167,7 +170,9 @@ export default function DashboardClient() {
             if (dayData.type === "working") {
                 const date = dayData.date;
                 const startOfWeek = new Date(date);
-                startOfWeek.setDate(date.getDate() - date.getDay());
+                const currentDay = date.getDay();
+                const daysToSubtract = (currentDay - weekStartDay + 7) % 7;
+                startOfWeek.setDate(date.getDate() - daysToSubtract);
                 const weekKey = startOfWeek.toISOString().split('T')[0];
 
                 const [startHour, startMin] = dayData.shiftStart.split(':').map(Number);
@@ -208,7 +213,9 @@ export default function DashboardClient() {
     const calculateWeeklyPay = () => {
         const today = new Date();
         const startOfWeek = new Date(today);
-        startOfWeek.setDate(today.getDate() - today.getDay());
+        const currentDay = today.getDay();
+        const daysToSubtract = (currentDay - weekStartDay + 7) % 7;
+        startOfWeek.setDate(today.getDate() - daysToSubtract);
         startOfWeek.setHours(0, 0, 0, 0);
 
         const endOfWeek = new Date(startOfWeek);
@@ -241,12 +248,16 @@ export default function DashboardClient() {
         const today = new Date();
 
         if (timeRange === "week") {
-            // Current week - Mon to Sun
+            // Current week based on user's preference
             const startOfWeek = new Date(today);
-            startOfWeek.setDate(today.getDate() - today.getDay());
+            const currentDay = today.getDay();
+            const daysToSubtract = (currentDay - weekStartDay + 7) % 7;
+            startOfWeek.setDate(today.getDate() - daysToSubtract);
             startOfWeek.setHours(0, 0, 0, 0);
 
-            const labels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+            // Generate day labels based on week start day
+            const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+            const labels = Array.from({ length: 7 }, (_, i) => dayNames[(weekStartDay + i) % 7]);
             const hours: number[] = [];
             const income: number[] = [];
 
@@ -306,7 +317,7 @@ export default function DashboardClient() {
                 const [profileResult] = await Promise.all([
                     supabase
                         .from('user_profiles')
-                        .select('first_name, surname, email, avatar_url, company_name, hourly_rate, job_type, currency')
+                        .select('first_name, surname, email, avatar_url, company_name, hourly_rate, job_type, currency, week_start_day')
                         .eq('user_id', session.user.id)
                         .single(),
                     syncRoster(session.user.id)
@@ -333,6 +344,7 @@ export default function DashboardClient() {
                     setHourlyRate(profile.hourly_rate || 13.50); // Set hourly rate from profile
                     setJobType(profile.job_type || "Part-time"); // Set job type from profile
                     setCurrency(profile.currency || "EUR"); // Set currency from profile
+                    setWeekStartDay(profile.week_start_day ?? 0); // Set week start day from profile
 
                     const userInitials = fullName
                         .split(" ")
@@ -360,7 +372,7 @@ export default function DashboardClient() {
         if (roster.size > 0 && hourlyRate > 0) {
             calculateHighestIncomeWeek();
         }
-    }, [roster, hourlyRate]);
+    }, [roster, hourlyRate, weekStartDay]);
 
 
 
@@ -881,7 +893,9 @@ export default function DashboardClient() {
                                                 {(() => {
                                                     const today = new Date();
                                                     const startOfWeek = new Date(today);
-                                                    startOfWeek.setDate(today.getDate() - today.getDay());
+                                                    const currentDay = today.getDay();
+                                                    const daysToSubtract = (currentDay - weekStartDay + 7) % 7;
+                                                    startOfWeek.setDate(today.getDate() - daysToSubtract);
                                                     startOfWeek.setHours(0, 0, 0, 0);
                                                     const endOfWeek = new Date(startOfWeek);
                                                     endOfWeek.setDate(startOfWeek.getDate() + 6);
