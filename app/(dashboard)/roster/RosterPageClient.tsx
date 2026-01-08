@@ -244,6 +244,8 @@ export default function RosterPageClient() {
     const [shiftStart, setShiftStart] = useState("09:00");
     const [shiftEnd, setShiftEnd] = useState("17:00");
     const [isSaving, setIsSaving] = useState(false);
+    const [saving, setSaving] = useState(false);
+    const [showSaveSuccess, setShowSaveSuccess] = useState(false);
 
     // Animation direction for calendar transitions
     const [direction, setDirection] = useState(0);
