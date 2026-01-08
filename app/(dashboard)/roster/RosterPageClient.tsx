@@ -1,7 +1,7 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -82,23 +82,15 @@ function TimePickerWheel({
     const [isOpen, setIsOpen] = useState(false);
     const [hour, minute] = value.split(':').map(Number);
 
-    // Internal state for the scrolling selection
+    // Local state for the picker's internal selection
     const [selectedHour, setSelectedHour] = useState(hour);
     const [selectedMinute, setSelectedMinute] = useState(minute);
 
     const hours = Array.from({ length: 24 }, (_, i) => i);
-    const minutes = Array.from({ length: 12 }, (_, i) => i * 5);
+    const minutes = Array.from({ length: 60 }, (_, i) => i).filter(m => m % 5 === 0);
 
     const formatTime = (h: number, m: number) => {
         return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
-    };
-
-    // Open: sync internal state with current prop value
-    const handleOpen = () => {
-        const [h, m] = value.split(':').map(Number);
-        setSelectedHour(h);
-        setSelectedMinute(m);
-        setIsOpen(!isOpen);
     };
 
     const handleConfirm = (e: React.MouseEvent) => {
@@ -107,103 +99,124 @@ function TimePickerWheel({
         setIsOpen(false);
     };
 
-    const handleCancel = (e: React.MouseEvent) => {
-        e.stopPropagation();
-        setIsOpen(false);
+    // Sub-component for the scrollable columns
+    const ScrollColumn = ({
+        items,
+        selected,
+        onSelect
+    }: {
+        items: number[],
+        selected: number,
+        onSelect: (v: number) => void
+    }) => {
+        const scrollRef = useRef<HTMLDivElement>(null);
+        const itemHeight = 40; // Height in pixels of each row
+
+        // Triple the items for the infinite loop effect
+        const loopedItems = [...items, ...items, ...items];
+
+        // Initial Scroll: Center on the middle set of items
+        useEffect(() => {
+            if (isOpen && scrollRef.current) {
+                const centerOffset = items.length * itemHeight;
+                const selectedIndex = items.indexOf(selected);
+                scrollRef.current.scrollTop = centerOffset + (selectedIndex * itemHeight);
+            }
+        }, [isOpen]);
+
+        const handleScroll = () => {
+            if (!scrollRef.current) return;
+            const scrollPos = scrollRef.current.scrollTop;
+            const totalDataHeight = items.length * itemHeight;
+
+            // Infinite Loop Logic: Reset to center if we move into top/bottom clones
+            if (scrollPos <= 0) {
+                scrollRef.current.scrollTop = totalDataHeight;
+            } else if (scrollPos >= totalDataHeight * 2) {
+                scrollRef.current.scrollTop = totalDataHeight;
+            }
+
+            // Update selection based on center position
+            const index = Math.round(scrollPos / itemHeight) % items.length;
+            const newValue = items[index];
+            if (newValue !== undefined && newValue !== selected) {
+                onSelect(newValue);
+            }
+        };
+
+        return (
+            <div className="relative h-[200px] w-14 md:w-16 flex flex-col items-center">
+                <div
+                    ref={scrollRef}
+                    onScroll={handleScroll}
+                    className="h-full w-full overflow-y-auto snap-y snap-mandatory no-scrollbar"
+                    style={{
+                        scrollbarWidth: 'none',
+                        msOverflowStyle: 'none',
+                        maskImage: 'linear-gradient(to bottom, transparent, black 40%, black 60%, transparent)'
+                    }}
+                >
+                    {/* Padding ensures the selected item can align with the center highlight */}
+                    <div className="h-[80px]" />
+                    {loopedItems.map((item, idx) => {
+                        const isSelected = selected === item && Math.floor(idx / items.length) === 1;
+                        return (
+                            <div
+                                key={`${item}-${idx}`}
+                                className={`
+                                    snap-center h-[40px] flex items-center justify-center cursor-pointer transition-all duration-200
+                                    ${selected === item ? 'scale-110' : 'scale-90 opacity-30 blur-[0.5px]'}
+                                `}
+                            >
+                                <span className={`font-mono text-lg md:text-xl ${selected === item ? 'font-bold text-slate-800 dark:text-white' : 'text-slate-500'}`}>
+                                    {item.toString().padStart(2, '0')}
+                                </span>
+                            </div>
+                        );
+                    })}
+                    <div className="h-[80px]" />
+                </div>
+            </div>
+        );
     };
 
-    // Helper for the scrollable columns
-    const ScrollColumn = ({ items, selected, onSelect }: { items: number[], selected: number, onSelect: (v: number) => void }) => (
-        <div
-            className="h-full w-10 md:w-14 overflow-y-auto snap-y snap-mandatory relative [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
-            style={{ maskImage: 'linear-gradient(to bottom, transparent, black 20%, black 80%, transparent)' }}
-        >
-            <div className="py-[60px]">
-                {items.map((item) => {
-                    const isSelected = selected === item;
-                    return (
-                        <div
-                            key={item}
-                            onMouseDown={(e) => { e.preventDefault(); onSelect(item); }}
-                            className={`
-                                snap-center h-8 md:h-9 flex items-center justify-center cursor-pointer transition-all duration-200 select-none
-                                ${isSelected ? 'scale-110' : 'scale-90 opacity-40 blur-[0.5px]'}
-                            `}
-                        >
-                            <span className={`font-mono text-base md:text-lg ${isSelected ? 'font-bold text-slate-800 dark:text-white' : 'text-slate-500'}`}>
-                                {item.toString().padStart(2, '0')}
-                            </span>
-                        </div>
-                    );
-                })}
-            </div>
-        </div>
-    );
-
     return (
-        <div className="relative flex-1 min-w-[80px] md:min-w-[90px]">
-            {/* Label */}
-            <label className="text-[9px] md:text-[10px] uppercase tracking-widest font-semibold text-slate-400 dark:text-neutral-500 mb-1.5 block ml-1">
+        <div className="relative flex-1">
+            <label className="text-[10px] uppercase tracking-widest font-bold text-slate-400 mb-1.5 block ml-1">
                 {label}
             </label>
 
-            {/* Trigger Button */}
             <Button
-                onClick={handleOpen}
+                onClick={() => setIsOpen(true)}
                 variant="outline"
-                className={`
-                    w-full justify-between px-2 md:px-3 h-9 md:h-11 bg-white dark:bg-neutral-900 
-                    border-slate-200 dark:border-neutral-800 font-mono text-sm md:text-lg
-                    ${isOpen ? 'ring-2 ring-slate-200 dark:ring-neutral-700 border-transparent' : ''}
-                `}
+                className="w-full h-11 bg-white dark:bg-neutral-900 border-slate-200 dark:border-neutral-800 font-mono text-lg"
             >
-                <span className="text-slate-700 dark:text-slate-200">{value}</span>
-                <Clock className={`w-3 h-3 md:w-3.5 md:h-3.5 transition-colors ${isOpen ? 'text-slate-800 dark:text-white' : 'text-slate-400'}`} />
+                {value}
             </Button>
 
-            {/* Dropdown Popover */}
             <AnimatePresence>
                 {isOpen && (
                     <>
-                        {/* Backdrop overlay */}
-                        <div
-                            className="fixed inset-0 z-40"
-                            onClick={handleCancel}
-                        />
+                        <div className="fixed inset-0 z-40 bg-black/5" onClick={() => setIsOpen(false)} />
                         <motion.div
-                            initial={{ opacity: 0, y: -8, scale: 0.98 }}
-                            animate={{ opacity: 1, y: 0, scale: 1 }}
-                            exit={{ opacity: 0, y: -8, scale: 0.98 }}
-                            transition={{ duration: 0.15 }}
-                            className="absolute top-full left-1/2 -translate-x-1/2 mt-2 z-50 w-[160px] md:w-[200px]"
+                            initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                            className="absolute top-full left-1/2 -translate-x-1/2 mt-2 z-50"
                         >
-                            <div className="bg-white dark:bg-neutral-900 rounded-xl shadow-2xl border border-slate-200 dark:border-neutral-800 overflow-hidden">
-
-                                {/* Header Actions */}
-                                <div className="flex items-center justify-between px-3 py-2 border-b border-slate-100 dark:border-neutral-800 bg-slate-50/50 dark:bg-neutral-900/50">
-                                    <button onClick={handleCancel} className="p-1.5 rounded-lg hover:bg-slate-200 dark:hover:bg-neutral-800 text-slate-400 hover:text-rose-500 transition-colors">
-                                        <X className="w-4 h-4" />
-                                    </button>
-                                    <div className="text-[9px] md:text-[10px] font-bold text-slate-400 dark:text-neutral-500 uppercase tracking-widest">
-                                        Set Time
-                                    </div>
-                                    <button onClick={handleConfirm} className="p-1.5 rounded-lg hover:bg-slate-200 dark:hover:bg-neutral-800 text-slate-400 hover:text-emerald-500 transition-colors">
-                                        <Check className="w-4 h-4" />
-                                    </button>
-                                </div>
-
-                                {/* Wheel Area */}
-                                <div className="flex justify-center gap-1 md:gap-2 p-2 md:p-3 h-[160px] md:h-[180px] relative bg-white dark:bg-neutral-900">
-                                    {/* Center Selection Highlight Bar */}
-                                    <div className="absolute top-1/2 left-2 right-2 md:left-4 md:right-4 -translate-y-1/2 h-8 md:h-9 bg-slate-100 dark:bg-neutral-800 rounded-lg -z-10" />
+                            <div className="bg-white dark:bg-neutral-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-neutral-800 p-4 w-[180px] md:w-[220px]">
+                                <div className="relative flex justify-center items-center h-[200px] bg-slate-50/50 dark:bg-neutral-950/50 rounded-2xl overflow-hidden">
+                                    {/* Selection Bar */}
+                                    <div className="absolute top-1/2 -translate-y-1/2 left-2 right-2 h-10 bg-blue-500/10 dark:bg-blue-500/20 rounded-xl pointer-events-none" />
 
                                     <ScrollColumn items={hours} selected={selectedHour} onSelect={setSelectedHour} />
-
-                                    <div className="flex items-center justify-center w-3 md:w-4">
-                                        <span className="text-slate-400 dark:text-neutral-600 font-bold text-base md:text-lg">:</span>
-                                    </div>
-
+                                    <div className="text-xl font-bold text-slate-300 mx-1">:</div>
                                     <ScrollColumn items={minutes} selected={selectedMinute} onSelect={setSelectedMinute} />
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-2 mt-4">
+                                    <Button variant="ghost" size="sm" onClick={() => setIsOpen(false)}>Cancel</Button>
+                                    <Button size="sm" onClick={handleConfirm} className="bg-zinc-900 dark:bg-white dark:text-black">Set</Button>
                                 </div>
                             </div>
                         </motion.div>
@@ -230,6 +243,7 @@ export default function RosterPageClient() {
     // Form state for selected day
     const [shiftStart, setShiftStart] = useState("09:00");
     const [shiftEnd, setShiftEnd] = useState("17:00");
+    const [isSaving, setIsSaving] = useState(false);
 
     // Animation direction for calendar transitions
     const [direction, setDirection] = useState(0);
@@ -346,60 +360,83 @@ export default function RosterPageClient() {
         return totalHours * hourlyRate;
     };
 
-    // Toggle day type - WITH SUPABASE SAVE
-    const toggleDayType = async (date: Date) => {
+    // Just select date - no toggle
+    const selectDate = (date: Date) => {
+        setSelectedDate(date);
+
+        // Load existing data into form
+        const key = getDateKey(date);
+        const current = roster.get(key);
+
+        if (current && current.type === "working") {
+            setShiftStart(current.shiftStart);
+            setShiftEnd(current.shiftEnd);
+        } else if (current && current.type === "off") {
+            // Keep previous times for display
+            setShiftStart(current.shiftStart || "09:00");
+            setShiftEnd(current.shiftEnd || "17:00");
+        } else {
+            // New entry - set defaults
+            setShiftStart("09:00");
+            setShiftEnd("17:00");
+        }
+    };
+
+    // Set day type from dropdown
+    const setDayType = async (date: Date, type: DayType) => {
         const key = getDateKey(date);
         const current = roster.get(key);
         const newRoster = new Map(roster);
 
-        if (!current || current.type === null) {
+        if (type === null) {
+            // Clear the day
+            newRoster.delete(key);
+        } else if (type === "working") {
             newRoster.set(key, {
                 date,
                 type: "working",
-                shiftStart: "09:00",
-                shiftEnd: "17:00",
-            });
-        } else if (current.type === "working") {
-            newRoster.set(key, {
-                ...current,
-                type: "off",
+                shiftStart: current?.shiftStart || shiftStart,
+                shiftEnd: current?.shiftEnd || shiftEnd,
             });
         } else {
-            newRoster.delete(key);
+            // off
+            newRoster.set(key, {
+                date,
+                type: "off",
+                shiftStart: current?.shiftStart || shiftStart,
+                shiftEnd: current?.shiftEnd || shiftEnd,
+            });
         }
 
         setRoster(newRoster);
-        setSelectedDate(date);
 
         // SAVE TO SUPABASE
         if (userId) await saveRosterToSupabase(userId, newRoster);
-
-        // Update form with current data
-        const updatedData = newRoster.get(key);
-        if (updatedData && updatedData.type === "working") {
-            setShiftStart(updatedData.shiftStart);
-            setShiftEnd(updatedData.shiftEnd);
-        }
     };
 
     // Update shift times - WITH SUPABASE SAVE
     const updateShiftTimes = async () => {
         if (!selectedDate) return;
 
-        const key = getDateKey(selectedDate);
-        const current = roster.get(key);
+        setIsSaving(true);
+        try {
+            const key = getDateKey(selectedDate);
+            const current = roster.get(key);
 
-        if (current && current.type === "working") {
-            const newRoster = new Map(roster);
-            newRoster.set(key, {
-                ...current,
-                shiftStart,
-                shiftEnd,
-            });
-            setRoster(newRoster);
+            if (current && current.type === "working") {
+                const newRoster = new Map(roster);
+                newRoster.set(key, {
+                    ...current,
+                    shiftStart,
+                    shiftEnd,
+                });
+                setRoster(newRoster);
 
-            // SAVE TO SUPABASE
-            if (userId) await saveRosterToSupabase(userId, newRoster);
+                // SAVE TO SUPABASE
+                if (userId) await saveRosterToSupabase(userId, newRoster);
+            }
+        } finally {
+            setIsSaving(false);
         }
     };
 
@@ -547,7 +584,7 @@ export default function RosterPageClient() {
                             <Tooltip>
                                 <TooltipTrigger asChild>
                                     <div
-                                        onClick={() => toggleDayType(date)}
+                                        onClick={() => selectDate(date)}
                                         className="absolute inset-0 z-10"
                                     >
                                         <motion.div
@@ -587,7 +624,7 @@ export default function RosterPageClient() {
                         </TooltipProvider>
                     ) : (
                         <motion.div
-                            onClick={() => toggleDayType(date)}
+                            onClick={() => selectDate(date)}
                             className="flex flex-col h-full justify-between items-center"
                             animate={dayType ? { scale: [1, 1.05, 1] } : {}}
                             transition={{ duration: 0.3 }}
@@ -705,7 +742,7 @@ export default function RosterPageClient() {
                                 <Tooltip>
                                     <TooltipTrigger asChild>
                                         <div
-                                            onClick={() => toggleDayType(date)}
+                                            onClick={() => selectDate(date)}
                                             className="absolute inset-0 z-10 flex flex-col"
                                         >
                                             <div className="text-center mb-2 pt-2 md:pt-4">
@@ -754,7 +791,7 @@ export default function RosterPageClient() {
                                 </Tooltip>
                             </TooltipProvider>
                         ) : (
-                            <div onClick={() => toggleDayType(date)}>
+                            <div onClick={() => selectDate(date)}>
                                 <div className="text-center mb-2">
                                     <div className="text-[10px] md:text-xs font-semibold text-slate-600 dark:text-neutral-400">
                                         {date.toLocaleDateString('en-US', { weekday: 'short' })}
@@ -823,7 +860,7 @@ export default function RosterPageClient() {
         : "";
 
     const selectedDayData = selectedDate ? getDayData(selectedDate) : null;
-    const canEditShift = selectedDayData && selectedDayData.type === "working";
+    const canEditShift = selectedDate !== null;
 
     return (
         <div className="px-4 py-6 md:px-6 lg:px-8 xl:px-12">
@@ -1009,6 +1046,22 @@ export default function RosterPageClient() {
                                                 exit={{ opacity: 0, y: -10 }}
                                                 className="space-y-8"
                                             >
+                                                {/* Day Type Selector */}
+                                                <div className="space-y-3">
+                                                    <label className="text-xs font-bold uppercase tracking-wider text-zinc-400 block">
+                                                        Day Type
+                                                    </label>
+                                                    <select
+                                                        value={getDayData(selectedDate)?.type || ""}
+                                                        onChange={(e) => setDayType(selectedDate, e.target.value as DayType || null)}
+                                                        className="w-full h-12 px-4 bg-white border border-zinc-200 rounded-xl text-zinc-900 font-medium focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent transition-all"
+                                                    >
+                                                        <option value="">Not Set</option>
+                                                        <option value="working">Working Day</option>
+                                                        <option value="off">Day Off</option>
+                                                    </select>
+                                                </div>
+
                                                 {/* Time Selectors with more breathing room */}
                                                 <div className="flex justify-between items-center bg-zinc-50/50 p-3 md:p-4 rounded-2xl border border-zinc-100/50">
                                                     <TimePickerWheel
@@ -1028,9 +1081,17 @@ export default function RosterPageClient() {
                                                     <motion.div whileTap={{ scale: 0.98 }}>
                                                         <Button
                                                             onClick={updateShiftTimes}
-                                                            className="w-full h-12 bg-zinc-900 hover:bg-zinc-800 text-white rounded-xl shadow-sm transition-all"
+                                                            disabled={isSaving}
+                                                            className="w-full h-12 bg-zinc-900 hover:bg-zinc-800 text-white rounded-xl shadow-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                                                         >
-                                                            Apply Changes
+                                                            {isSaving ? (
+                                                                <div className="flex items-center gap-2">
+                                                                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                                                    <span>Saving...</span>
+                                                                </div>
+                                                            ) : (
+                                                                "Apply Changes"
+                                                            )}
                                                         </Button>
                                                     </motion.div>
 
@@ -1062,10 +1123,7 @@ export default function RosterPageClient() {
                                                         </svg>
                                                     </div>
                                                     <p className="text-sm text-zinc-500 max-w-[180px] leading-relaxed">
-                                                        {selectedDate
-                                                            ? "Tap the date again to toggle between a work day or holiday."
-                                                            : "Select a date on the calendar to manage your shift."
-                                                        }
+                                                        Select a date on the calendar to manage your shift.
                                                     </p>
                                                 </div>
 
@@ -1090,8 +1148,8 @@ export default function RosterPageClient() {
                                                                 2
                                                             </div>
                                                             <div className="flex-1">
-                                                                <p className="text-xs font-semibold text-zinc-800 mb-0.5">Set Working/Off Day</p>
-                                                                <p className="text-[11px] text-zinc-500 leading-relaxed">Toggle between working (blue) and off (red)</p>
+                                                                <p className="text-xs font-semibold text-zinc-800 mb-0.5">Choose Day Type</p>
+                                                                <p className="text-[11px] text-zinc-500 leading-relaxed">Select Working, Off, or Not Set from dropdown</p>
                                                             </div>
                                                         </div>
                                                         <div className="flex items-start gap-3">
@@ -1148,13 +1206,4 @@ export default function RosterPageClient() {
             </div>
         </div>
     );
-}
-
-function setSaving(arg0: boolean) {
-    throw new Error("Function not implemented.");
-}
-
-
-function setShowSaveSuccess(arg0: boolean) {
-    throw new Error("Function not implemented.");
 }
