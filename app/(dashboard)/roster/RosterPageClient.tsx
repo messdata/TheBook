@@ -255,6 +255,7 @@ export default function RosterPageClient() {
     const [payDayWeekly, setPayDayWeekly] = useState<number>(5);
     const [payDayMonthly, setPayDayMonthly] = useState<number>(1);
     const [payStartDate, setPayStartDate] = useState<string>('');
+    const [weekStartDay, setWeekStartDay] = useState<number>(0); // 0 = Sunday, 1 = Monday, etc.
 
     // Load roster data on mount
     useEffect(() => {
@@ -286,7 +287,7 @@ export default function RosterPageClient() {
 
             const { data: profile } = await supabase
                 .from('user_profiles')
-                .select('pay_frequency, pay_day_weekly, pay_day_monthly, pay_start_date')
+                .select('pay_frequency, pay_day_weekly, pay_day_monthly, pay_start_date, week_start_day')
                 .eq('user_id', user.id)
                 .single();
 
@@ -295,6 +296,7 @@ export default function RosterPageClient() {
                 setPayDayWeekly(profile.pay_day_weekly || 5);
                 setPayDayMonthly(profile.pay_day_monthly || 1);
                 setPayStartDate(profile.pay_start_date || '');
+                setWeekStartDay(profile.week_start_day ?? 0);
             }
         };
 
@@ -523,8 +525,10 @@ export default function RosterPageClient() {
         const today = new Date();
         const days = [];
 
+        // Calculate adjusted first day based on week start preference
+        const adjustedFirstDay = (firstDay - weekStartDay + 7) % 7;
 
-        for (let i = 0; i < firstDay; i++) {
+        for (let i = 0; i < adjustedFirstDay; i++) {
             days.push(
                 <motion.div
                     key={`empty-${i}`}
@@ -665,15 +669,20 @@ export default function RosterPageClient() {
                 initial="hidden"
                 animate="visible"
             >
-                {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day, idx) => (
-                    <div
-                        key={day}
-                        className="text-center text-[10px] md:text-sm font-bold text-slate-600 dark:text-neutral-400 py-1 md:py-2"
-                    >
-                        <span className="hidden sm:inline">{day}</span>
-                        <span className="sm:hidden">{day.charAt(0)}</span>
-                    </div>
-                ))}
+                {Array.from({ length: 7 }, (_, i) => {
+                    const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+                    const dayIndex = (weekStartDay + i) % 7;
+                    const day = dayNames[dayIndex];
+                    return (
+                        <div
+                            key={i}
+                            className="text-center text-[10px] md:text-sm font-bold text-slate-600 dark:text-neutral-400 py-1 md:py-2"
+                        >
+                            <span className="hidden sm:inline">{day}</span>
+                            <span className="sm:hidden">{day.charAt(0)}</span>
+                        </div>
+                    );
+                })}
                 {days}
             </motion.div>
         );
@@ -682,7 +691,9 @@ export default function RosterPageClient() {
     // Render Week View
     const renderWeekView = () => {
         const startOfWeek = new Date(currentDate);
-        startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
+        const currentDay = startOfWeek.getDay();
+        const daysToSubtract = (currentDay - weekStartDay + 7) % 7;
+        startOfWeek.setDate(startOfWeek.getDate() - daysToSubtract);
 
         const days = [];
         const today = new Date();
